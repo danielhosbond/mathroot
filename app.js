@@ -472,6 +472,11 @@ function renderQuestion() {
       div.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleAnswer(c, div); });
       newGrid.appendChild(div);
     });
+    // Tiny rAF delay so iOS commits the new DOM before revealing —
+    // ensures the old painted frame is gone before we show the new buttons.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { newGrid.classList.remove('choices-hidden'); });
+    });
   } else {
     newGrid.style.display = 'none';
     $('numpad-wrap').style.display = '';
@@ -523,7 +528,11 @@ function handleAnswer(chosen, btnEl) {
 
   const card=$('question-card'), fb=$('feedback-msg');
   if(selectedMode==='quiz') {
-    // Mark all choices as answered so further taps are ignored
+    // Immediately make the grid invisible on tap — iOS cannot show stale
+    // button state if the grid is already transparent before the next render.
+    const grid = $('choices-grid');
+    if (grid) grid.classList.add('choices-hidden');
+
     document.querySelectorAll('.choice-btn').forEach(b => b.setAttribute('data-answered','1'));
     if(wasCorrect) {
       correct++; card.classList.add('correct');
