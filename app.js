@@ -430,29 +430,47 @@ function startQuiz() {
 }
 
 function renderQuestion() {
-  answered=false; questionStartTime=Date.now();
-  const q=generateQuestion(selectedOp);
-  currentAnswer=q.answer;
-  const {display}=q;
-  renderQuestion._currentEquation=`${display.a} ${display.op} ${display.b}`;
+  answered = false;
+  questionStartTime = Date.now();
 
-  $('q-label').textContent   = t('questionOf')(currentQ+1, totalQ);
-  $('q-counter').textContent = `${currentQ+1}/${totalQ}`;
+  // ── Clear stale UI immediately ──────────────────────────────────────────
+  // iOS Safari/Chrome batch repaints aggressively: wipe both interactive
+  // areas and the card state BEFORE reading layout, then force a reflow so
+  // the browser flushes the old highlighted buttons before painting new ones.
+  const card = $('question-card');
+  const choicesEl = $('choices-grid');
+  const fb = $('feedback-msg');
+
+  choicesEl.innerHTML = '';                          // remove old buttons NOW
+  card.classList.remove('correct', 'wrong');         // reset card border colour
+  fb.textContent = ''; fb.className = 'feedback';   // hide feedback
+
+  void card.offsetHeight;                            // force reflow — flushes iOS composited layer
+
+  // ── Generate new question ───────────────────────────────────────────────
+  const q = generateQuestion(selectedOp);
+  currentAnswer = q.answer;
+  const { display } = q;
+  renderQuestion._currentEquation = `${display.a} ${display.op} ${display.b}`;
+
+  $('q-label').textContent   = t('questionOf')(currentQ + 1, totalQ);
+  $('q-counter').textContent = `${currentQ + 1}/${totalQ}`;
   $('q-equation').innerHTML  = `<span>${display.a}</span><span class="q-eq-op">${display.op}</span><span>${display.b}</span><span class="q-eq-op">=</span><span class="q-eq-box">?</span>`;
 
-  $('question-card').classList.remove('correct','wrong');
-  const fb=$('feedback-msg'); fb.textContent=''; fb.className='feedback';
-
-  if (selectedMode==='quiz') {
-    $('choices-grid').style.display=''; $('numpad-wrap').style.display='none';
-    const el=$('choices-grid'); el.innerHTML='';
-    generateChoices(currentAnswer,selectedOp).forEach(c=>{
-      const btn=document.createElement('button');
-      btn.className='choice-btn'; btn.textContent=c;
-      btn.addEventListener('click',()=>handleAnswer(c,btn)); el.appendChild(btn);
+  if (selectedMode === 'quiz') {
+    choicesEl.style.display = '';
+    $('numpad-wrap').style.display = 'none';
+    generateChoices(currentAnswer, selectedOp).forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = c;
+      btn.addEventListener('click', () => handleAnswer(c, btn));
+      choicesEl.appendChild(btn);
     });
   } else {
-    $('choices-grid').style.display='none'; $('numpad-wrap').style.display=''; renderNumpad();
+    choicesEl.style.display = 'none';
+    $('numpad-wrap').style.display = '';
+    renderNumpad();
   }
 }
 
