@@ -559,10 +559,28 @@ function handleAnswer(chosen, btnEl) {
   currentQ++;
 
   const delay = wasCorrect ? 1000 : 1500;
-  setTimeout(() => {
-    if (currentQ >= totalQ) showResults(false);
-    else renderQuestion();
-  }, delay);
+
+  // On touch devices, wait for the finger to fully lift before scheduling
+  // the next question. iOS applies tap-highlight based on the active touch —
+  // ensuring touchend has fired means the OS has released all touch state
+  // before any new interactive elements appear in the DOM.
+  let advanced = false;
+  const advance = () => {
+    if (advanced) return;
+    advanced = true;
+    setTimeout(() => {
+      if (currentQ >= totalQ) showResults(false);
+      else renderQuestion();
+    }, delay);
+  };
+
+  if ('ontouchend' in window) {
+    document.addEventListener('touchend', advance, { once: true, passive: true });
+    // Fallback in case touchend already fired before we registered
+    setTimeout(advance, 300);
+  } else {
+    advance();
+  }
 }
 
 function updateScorebar() {
