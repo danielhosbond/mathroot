@@ -523,15 +523,14 @@ function handleAnswer(chosen, btnEl) {
 
   const card=$('question-card'), fb=$('feedback-msg');
   if(selectedMode==='quiz') {
-    // Mark all choices as answered so pointerdown handler ignores further taps
+    // Mark all choices as answered so further taps are ignored
     document.querySelectorAll('.choice-btn').forEach(b => b.setAttribute('data-answered','1'));
     if(wasCorrect) {
-      correct++; card.classList.add('correct'); btnEl.classList.add('correct-choice');
+      correct++; card.classList.add('correct');
       fb.textContent=t('correctFeedback'); fb.className='feedback correct show';
     } else {
-      wrong++; card.classList.add('wrong'); btnEl.classList.add('wrong-choice');
+      wrong++; card.classList.add('wrong');
       card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400);
-      document.querySelectorAll('.choice-btn').forEach(b=>{ if(parseInt(b.textContent)===currentAnswer) b.classList.add('correct-choice'); });
       fb.textContent=t('wrongFeedback')(currentAnswer); fb.className='feedback wrong show';
     }
   } else {
