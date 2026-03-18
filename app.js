@@ -433,24 +433,24 @@ function renderQuestion() {
   answered = false;
   questionStartTime = Date.now();
 
-  const card      = $('question-card');
-  const choicesEl = $('choices-grid');
-  const fb        = $('feedback-msg');
+  const card = $('question-card');
+  const fb   = $('feedback-msg');
 
-  // ── Reset card state ────────────────────────────────────────────────────
+  // ── Reset card state ──────────────────────────────────────────────────
   card.classList.remove('correct', 'wrong');
   fb.textContent = ''; fb.className = 'feedback';
 
-  // ── Hide grid BEFORE clearing ───────────────────────────────────────────
-  // iOS Safari/Chrome keep a composited GPU layer for visible elements even
-  // after innerHTML is wiped. Setting display:none first forces the browser
-  // to drop that layer entirely, so old highlighted buttons can't ghost-render
-  // over the next question. New buttons are injected while the grid is still
-  // invisible, then revealed all at once.
-  choicesEl.style.display = 'none';
-  choicesEl.innerHTML = '';
+  // ── Replace the choices grid with a brand-new element ─────────────────
+  // Reusing the same DOM node and clearing innerHTML leaves iOS holding a
+  // GPU-composited snapshot of the old highlighted buttons. Replacing the
+  // entire node guarantees the compositor has no prior layer to fall back on.
+  const oldGrid = $('choices-grid');
+  const newGrid = document.createElement('div');
+  newGrid.id        = 'choices-grid';
+  newGrid.className = 'choices-grid';
+  oldGrid.replaceWith(newGrid);
 
-  // ── Generate new question ───────────────────────────────────────────────
+  // ── Generate new question ─────────────────────────────────────────────
   const q = generateQuestion(selectedOp);
   currentAnswer = q.answer;
   const { display } = q;
@@ -467,11 +467,10 @@ function renderQuestion() {
       btn.className   = 'choice-btn';
       btn.textContent = c;
       btn.addEventListener('click', () => handleAnswer(c, btn));
-      choicesEl.appendChild(btn);
+      newGrid.appendChild(btn);
     });
-    // Reveal the freshly-built grid in the same paint as the new question
-    choicesEl.style.display = '';
   } else {
+    newGrid.style.display = 'none';
     $('numpad-wrap').style.display = '';
     renderNumpad();
   }
