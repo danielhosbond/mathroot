@@ -336,7 +336,11 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 /* ══════════════════════════════════════════
    CHOICES  (quiz mode)
 ══════════════════════════════════════════ */
-.choices-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; margin-top: 32px; }
+.choices-grid {
+  display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; margin-top: 32px;
+  will-change: contents;
+  isolation: isolate;
+}
 .choice-btn {
   background: var(--surface2); border: 2px solid var(--border); border-radius: 10px;
   color: var(--text); font-family: 'Space Mono', monospace; font-size: 1.3rem; font-weight: 700;
