@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MathRoot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ── HEADER ── -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🧮</div>
+      MathRoot
+    </div>
+    <div class="header-controls">
+
+      <!-- Language picker -->
+      <div class="lang-picker" id="lang-picker">
+        <button class="lang-btn" id="lang-btn" onclick="toggleLangMenu()" aria-haspopup="listbox" aria-expanded="false">
+          <span id="lang-btn-label">EN</span>
+          <span class="grade-chevron">▾</span>
+        </button>
+        <div class="lang-menu" id="lang-menu" role="listbox">
+          <div class="lang-option active" data-lang="en" onclick="selectLang('en')">
+            <span class="lang-flag">🇬🇧</span><span class="lang-name">English</span>
+          </div>
+          <div class="lang-option" data-lang="da" onclick="selectLang('da')">
+            <span class="lang-flag">🇩🇰</span><span class="lang-name">Dansk</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grade picker -->
+      <div class="grade-picker" id="grade-picker">
+        <button class="grade-btn" id="grade-btn" onclick="toggleGradeMenu()" aria-haspopup="listbox" aria-expanded="false">
+          <span id="grade-btn-label">Grade 4</span>
+          <span class="grade-chevron">▾</span>
+        </button>
+        <div class="grade-menu" id="grade-menu" role="listbox"></div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ════════════════════════════════════════
+       HOME SECTION
+  ════════════════════════════════════════ -->
+  <div id="home-section">
+
+    <div class="hero">
+      <h1 data-i18n-html="heroTitle"></h1>
+      <p class="hero-tagline" data-i18n="heroTagline"></p>
+      <div class="grade-info" id="grade-info"></div>
+    </div>
+
+    <!-- Operation picker -->
+    <div class="section-label" data-i18n="chooseOperation"></div>
+    <div class="op-grid">
+      <div class="op-card" data-op="addition" onclick="selectOp(this)">
+        <span class="op-symbol">+</span>
+        <div class="op-name" data-i18n="addition"></div>
+      </div>
+      <div class="op-card" data-op="subtraction" onclick="selectOp(this)">
+        <span class="op-symbol">−</span>
+        <div class="op-name" data-i18n="subtraction"></div>
+      </div>
+      <div class="op-card" data-op="multiplication" onclick="selectOp(this)">
+        <span class="op-symbol">×</span>
+        <div class="op-name" data-i18n="multiplication"></div>
+      </div>
+      <div class="op-card" data-op="division" onclick="selectOp(this)">
+        <span class="op-symbol">÷</span>
+        <div class="op-name" data-i18n="division"></div>
+      </div>
+    </div>
+
+    <!-- Question count picker -->
+    <div class="section-label" data-i18n="numberOfQuestions"></div>
+    <div class="count-grid">
+      <div class="count-card active" data-count="10" onclick="selectCount(this)">
+        <span class="count-number">10</span>
+        <div class="count-label" data-i18n="quick"></div>
+      </div>
+      <div class="count-card" data-count="20" onclick="selectCount(this)">
+        <span class="count-number">20</span>
+        <div class="count-label" data-i18n="standard"></div>
+      </div>
+      <div class="count-card" data-count="30" onclick="selectCount(this)">
+        <span class="count-number">30</span>
+        <div class="count-label" data-i18n="long"></div>
+      </div>
+      <div class="count-card" data-count="40" onclick="selectCount(this)">
+        <span class="count-number">40</span>
+        <div class="count-label" data-i18n="marathon"></div>
+      </div>
+    </div>
+
+    <!-- Input mode picker -->
+    <div class="section-label" data-i18n="inputMode"></div>
+    <div class="mode-grid">
+      <div class="mode-card active" data-mode="quiz" onclick="selectMode(this)">
+        <div class="mode-preview quiz-preview">
+          <span class="mp-choice mp-correct">42</span>
+          <span class="mp-choice">39</span>
+          <span class="mp-choice">45</span>
+          <span class="mp-choice">37</span>
+        </div>
+        <div class="mode-name" data-i18n="modeQuiz"></div>
+        <div class="mode-desc" data-i18n="modeQuizDesc"></div>
+      </div>
+      <div class="mode-card" data-mode="input" onclick="selectMode(this)">
+        <div class="mode-preview input-preview">
+          <div class="mp-numrow">
+            <span class="mp-key">1</span><span class="mp-key">2</span><span class="mp-key">3</span>
+            <span class="mp-key">4</span><span class="mp-key">5</span><span class="mp-key">6</span>
+            <span class="mp-key">7</span><span class="mp-key">8</span><span class="mp-key">9</span>
+          </div>
+          <div class="mp-numrow mp-bottom-row">
+            <span class="mp-key">0</span>
+            <span class="mp-key mp-key-del">⌫</span>
+            <span class="mp-key mp-key-ok">✓</span>
+          </div>
+        </div>
+        <div class="mode-name" data-i18n="modeInput"></div>
+        <div class="mode-desc" data-i18n="modeInputDesc"></div>
+      </div>
+    </div>
+
+    <div class="start-row">
+      <button class="btn-submit" id="start-btn" onclick="startQuiz()" disabled data-i18n="startTraining"></button>
+    </div>
+
+    <!-- Session history -->
+    <div id="history-section" style="display:none;">
+      <div class="history-header">
+        <div class="section-label" style="margin-bottom:0;" data-i18n="sessionHistory"></div>
+        <button class="btn-clear-history" onclick="clearHistory()" data-i18n="clearAll"></button>
+      </div>
+      <div class="history-list" id="history-list"></div>
+    </div>
+
+  </div><!-- /#home-section -->
+
+  <!-- ════════════════════════════════════════
+       QUIZ SECTION
+  ════════════════════════════════════════ -->
+  <div id="quiz-section">
+
+    <div class="scorebar">
+      <div class="score-item">
+        <span class="score-label" data-i18n="correct"></span>
+        <span class="score-val green" id="score-correct">0</span>
+      </div>
+      <div class="progress-bar-outer">
+        <div class="progress-bar-inner" id="progress-bar"></div>
+      </div>
+      <div class="score-item">
+        <span class="score-label" data-i18n="wrong"></span>
+        <span class="score-val red" id="score-wrong">0</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">Q</span>
+        <span class="score-val grape" id="q-counter">1/10</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label" data-i18n="time"></span>
+        <span class="score-val" id="session-timer">0:00</span>
+      </div>
+      <button class="btn-cancel" onclick="cancelQuiz()" data-i18n="stop"></button>
+    </div>
+
+    <div class="question-card" id="question-card">
+      <div class="q-number" id="q-label"></div>
+      <div class="q-equation" id="q-equation"></div>
+      <div class="choices-grid" id="choices-grid"></div>
+      <div class="numpad-wrap" id="numpad-wrap" style="display:none;">
+        <div class="numpad-display" id="numpad-display">_</div>
+        <div class="numpad-grid" id="numpad-grid"></div>
+      </div>
+      <div class="feedback" id="feedback-msg"></div>
+    </div>
+
+  </div><!-- /#quiz-section -->
+
+  <!-- ════════════════════════════════════════
+       RESULT SECTION
+  ════════════════════════════════════════ -->
+  <div id="result-section">
+    <div class="result-card">
+      <span class="result-emoji" id="result-emoji">🎉</span>
+      <h2><span data-i18n="session"></span> <span id="result-title"></span></h2>
+      <p class="result-sub" id="result-sub"></p>
+      <div class="result-stats">
+        <div class="score-item">
+          <div class="result-stat-val green" id="res-correct">—</div>
+          <div class="result-stat-label" data-i18n="correct"></div>
+        </div>
+        <div class="score-item">
+          <div class="result-stat-val red" id="res-wrong">—</div>
+          <div class="result-stat-label" data-i18n="wrong"></div>
+        </div>
+        <div class="score-item">
+          <div class="result-stat-val grape" id="res-pct">—</div>
+          <div class="result-stat-label" data-i18n="score"></div>
+        </div>
+        <div class="score-item">
+          <div class="result-stat-val" id="res-duration">—</div>
+          <div class="result-stat-label" data-i18n="duration"></div>
+        </div>
+        <div class="score-item">
+          <div class="result-stat-val" id="res-avg">—</div>
+          <div class="result-stat-label" data-i18n="avgPerQuestion"></div>
+        </div>
+      </div>
+      <div class="result-badge-row">
+        <span class="badge-grade" id="res-grade-badge"></span>
+        <span class="badge-mode"  id="res-mode-badge"></span>
+      </div>
+      <div class="result-actions">
+        <button class="btn-secondary" onclick="goHome()" data-i18n="backToOverview"></button>
+        <button class="btn-restart"   onclick="replaySession()" data-i18n="playAgain"></button>
+      </div>
+    </div>
+    <div class="summary-header">
+      <div class="section-label" style="margin-bottom:0;" data-i18n="questionSummary"></div>
+      <span class="summary-count" id="summary-count"></span>
+    </div>
+    <div class="summary-list" id="summary-list"></div>
+    <div class="summary-footer">
+      <button class="btn-secondary" onclick="goHome()" data-i18n="backToOverview"></button>
+    </div>
+  </div><!-- /#result-section -->
+
+  <!-- ════════════════════════════════════════
+       SESSION DETAIL
+  ════════════════════════════════════════ -->
+  <div id="detail-section">
+    <div class="detail-header">
+      <button class="btn-secondary" onclick="closeDetail()" data-i18n="backToOverview"></button>
+    </div>
+    <div class="result-card">
+      <span class="result-emoji" id="detail-emoji">🎉</span>
+      <h2><span data-i18n="session"></span> <span id="detail-title">—</span></h2>
+      <p class="result-sub" id="detail-sub">—</p>
+      <div class="result-stats">
+        <div class="score-item">
+          <div class="result-stat-val green" id="detail-correct">—</div>
+          <div class="result-stat-label" data-i18n="correct"></div>
+        </div>
+        <div class="score-item">
+          <div class="result-stat-val red" id="detail-wrong">—</div>
+          <div class="result-stat-label" data-i18n="wrong"></div>
+        </div>
+        <div class="score-item">
+          <div class="result-stat-val grape" id="detail-pct">—</div>
+          <div class="result-stat-label" data-i18n="score"></div>
+        </div>
+        <div class="score-item">
+          <div class="result-stat-val" id="detail-duration">—</div>
+          <div class="result-stat-label" data-i18n="duration"></div>
+        </div>
+        <div class="score-item">
+          <div class="result-stat-val" id="detail-avg">—</div>
+          <div class="result-stat-label" data-i18n="avgPerQuestion"></div>
+        </div>
+      </div>
+      <div class="result-badge-row">
+        <span class="badge-grade" id="detail-grade-badge"></span>
+        <span class="badge-mode"  id="detail-mode-badge"></span>
+      </div>
+    </div>
+    <div class="summary-header">
+      <div class="section-label" style="margin-bottom:0;" data-i18n="questionSummary"></div>
+      <span class="summary-count" id="detail-count"></span>
+    </div>
+    <div class="summary-list" id="detail-list"></div>
+    <div class="summary-footer">
+      <button class="btn-secondary" onclick="closeDetail()" data-i18n="backToOverview"></button>
+    </div>
+  </div><!-- /#detail-section -->
+
+</div><!-- /.wrap -->
+<script src="app.js"></script>
+</body>
+</html>
