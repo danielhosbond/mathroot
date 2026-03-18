@@ -472,9 +472,11 @@ function renderQuestion() {
       div.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleAnswer(c, div); });
       newGrid.appendChild(div);
     });
-    // Reveal after a brief delay — gives iOS time to fully commit the new
-    // hidden DOM before we make it visible, preventing any stale paint bleed.
-    setTimeout(() => { newGrid.classList.remove('choices-hidden'); }, 50);
+    // Reveal after a brief delay, then unblock input.
+    setTimeout(() => {
+      newGrid.classList.remove('choices-hidden');
+      card.classList.remove('input-blocked');
+    }, 50);
   } else {
     newGrid.style.display = 'none';
     $('numpad-wrap').style.display = '';
@@ -526,8 +528,12 @@ function handleAnswer(chosen, btnEl) {
 
   const card=$('question-card'), fb=$('feedback-msg');
   if(selectedMode==='quiz') {
-    // Immediately make the grid invisible on tap — iOS cannot show stale
-    // button state if the grid is already transparent before the next render.
+    // Block all touch/pointer events on the card immediately.
+    // iOS fires a delayed visual tap-highlight on whatever element sits at
+    // the tapped coordinates when it next paints. The blocker overlay ensures
+    // the new buttons are unreachable by that ghost event.
+    card.classList.add('input-blocked');
+
     const grid = $('choices-grid');
     if (grid) grid.classList.add('choices-hidden');
 
