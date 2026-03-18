@@ -463,11 +463,14 @@ function renderQuestion() {
   if (selectedMode === 'quiz') {
     $('numpad-wrap').style.display = 'none';
     generateChoices(currentAnswer, selectedOp).forEach(c => {
-      const btn = document.createElement('button');
-      btn.className   = 'choice-btn';
-      btn.textContent = c;
-      btn.addEventListener('click', () => handleAnswer(c, btn));
-      newGrid.appendChild(btn);
+      const div = document.createElement('div');
+      div.className   = 'choice-btn';
+      div.textContent = c;
+      div.setAttribute('role', 'button');
+      div.setAttribute('tabindex', '0');
+      div.addEventListener('pointerdown', e => { e.preventDefault(); handleAnswer(c, div); });
+      div.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleAnswer(c, div); });
+      newGrid.appendChild(div);
     });
   } else {
     newGrid.style.display = 'none';
@@ -511,14 +514,17 @@ document.addEventListener('keydown', e => {
 // HANDLE ANSWER
 // ══════════════════════════════════════════
 function handleAnswer(chosen, btnEl) {
-  if(answered) return; answered=true;
+  if(answered) return;
+  if(btnEl && btnEl.getAttribute('data-answered')) return;
+  answered=true;
   const elapsedMs=Date.now()-questionStartTime;
   const wasCorrect=(chosen===currentAnswer);
   sessionLog.push({equation:renderQuestion._currentEquation,correctAnswer:currentAnswer,chosen,wasCorrect,elapsedMs});
 
   const card=$('question-card'), fb=$('feedback-msg');
   if(selectedMode==='quiz') {
-    document.querySelectorAll('.choice-btn').forEach(b=>(b.disabled=true));
+    // Mark all choices as answered so pointerdown handler ignores further taps
+    document.querySelectorAll('.choice-btn').forEach(b => b.setAttribute('data-answered','1'));
     if(wasCorrect) {
       correct++; card.classList.add('correct'); btnEl.classList.add('correct-choice');
       fb.textContent=t('correctFeedback'); fb.className='feedback correct show';
