@@ -447,7 +447,7 @@ function renderQuestion() {
   const oldGrid = $('choices-grid');
   const newGrid = document.createElement('div');
   newGrid.id        = 'choices-grid';
-  newGrid.className = 'choices-grid';
+  newGrid.className = 'choices-grid choices-hidden';  // hidden from birth
   oldGrid.replaceWith(newGrid);
 
   // ── Generate new question ─────────────────────────────────────────────
@@ -472,11 +472,9 @@ function renderQuestion() {
       div.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleAnswer(c, div); });
       newGrid.appendChild(div);
     });
-    // Tiny rAF delay so iOS commits the new DOM before revealing —
-    // ensures the old painted frame is gone before we show the new buttons.
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => { newGrid.classList.remove('choices-hidden'); });
-    });
+    // Reveal after a brief delay — gives iOS time to fully commit the new
+    // hidden DOM before we make it visible, preventing any stale paint bleed.
+    setTimeout(() => { newGrid.classList.remove('choices-hidden'); }, 50);
   } else {
     newGrid.style.display = 'none';
     $('numpad-wrap').style.display = '';
