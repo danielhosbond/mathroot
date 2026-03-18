@@ -12,10 +12,10 @@
 
   <!-- ── HEADER ── -->
   <header>
-    <div class="logo">
+    <button class="logo" onclick="goHome()" title="MathRoot">
       <div class="logo-icon">🧮</div>
       MathRoot
-    </div>
+    </button>
     <div class="header-controls">
 
       <!-- Language picker -->
@@ -151,26 +151,33 @@
   <div id="quiz-section">
 
     <div class="scorebar">
-      <div class="score-item">
-        <span class="score-label" data-i18n="correct"></span>
-        <span class="score-val green" id="score-correct">0</span>
+      <!-- Row 1: stats + progress + stop -->
+      <div class="scorebar-row">
+        <div class="score-item">
+          <span class="score-label" data-i18n="correct"></span>
+          <span class="score-val green" id="score-correct">0</span>
+        </div>
+        <div class="progress-bar-outer">
+          <div class="progress-bar-inner" id="progress-bar"></div>
+        </div>
+        <div class="score-item">
+          <span class="score-label" data-i18n="wrong"></span>
+          <span class="score-val red" id="score-wrong">0</span>
+        </div>
+        <button class="btn-cancel" onclick="cancelQuiz()" data-i18n="stop"></button>
       </div>
-      <div class="progress-bar-outer">
-        <div class="progress-bar-inner" id="progress-bar"></div>
+      <!-- Row 2: Q counter + timer, fixed width so layout never shifts -->
+      <div class="scorebar-row scorebar-row-meta">
+        <div class="score-item">
+          <span class="score-label">Q</span>
+          <span class="score-val grape" id="q-counter">1/10</span>
+        </div>
+        <div class="scorebar-divider"></div>
+        <div class="score-item">
+          <span class="score-label" data-i18n="time"></span>
+          <span class="score-val" id="session-timer">0:00</span>
+        </div>
       </div>
-      <div class="score-item">
-        <span class="score-label" data-i18n="wrong"></span>
-        <span class="score-val red" id="score-wrong">0</span>
-      </div>
-      <div class="score-item">
-        <span class="score-label">Q</span>
-        <span class="score-val grape" id="q-counter">1/10</span>
-      </div>
-      <div class="score-item">
-        <span class="score-label" data-i18n="time"></span>
-        <span class="score-val" id="session-timer">0:00</span>
-      </div>
-      <button class="btn-cancel" onclick="cancelQuiz()" data-i18n="stop"></button>
     </div>
 
     <div class="question-card" id="question-card">
