@@ -528,14 +528,6 @@ function handleAnswer(chosen, btnEl) {
       document.querySelectorAll('.choice-btn').forEach(b=>{ if(parseInt(b.textContent)===currentAnswer) b.classList.add('correct-choice'); });
       fb.textContent=t('wrongFeedback')(currentAnswer); fb.className='feedback wrong show';
     }
-
-    // After a short moment the card border colour is clearly visible — hide
-    // the buttons entirely so there is zero highlighted content remaining in
-    // the DOM by the time renderQuestion runs. This prevents iOS from
-    // compositing the old highlighted layer into the next question's frame.
-    const hideDelay = wasCorrect ? 600 : 900;
-    setTimeout(() => { $('choices-grid').style.display = 'none'; }, hideDelay);
-
   } else {
     document.querySelectorAll('.numpad-btn').forEach(b=>(b.disabled=true));
     const disp=$('numpad-display');
