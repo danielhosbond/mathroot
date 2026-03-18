@@ -431,57 +431,62 @@ function startQuiz() {
 
 function renderQuestion() {
   answered = false;
-  questionStartTime = Date.now();
 
   const card = $('question-card');
-  const fb   = $('feedback-msg');
 
-  // ── Reset card state ──────────────────────────────────────────────────
-  card.classList.remove('correct', 'wrong');
-  fb.textContent = ''; fb.className = 'feedback';
+  // Animate the card out, swap content while invisible, animate back in.
+  // This ensures the new buttons are never at the same screen coordinates
+  // as the tap when iOS processes its pending touch events.
+  card.classList.add('card-exit');
 
-  // ── Replace the choices grid with a brand-new element ─────────────────
-  // Reusing the same DOM node and clearing innerHTML leaves iOS holding a
-  // GPU-composited snapshot of the old highlighted buttons. Replacing the
-  // entire node guarantees the compositor has no prior layer to fall back on.
-  const oldGrid = $('choices-grid');
-  const newGrid = document.createElement('div');
-  newGrid.id        = 'choices-grid';
-  newGrid.className = 'choices-grid choices-hidden';  // hidden from birth
-  oldGrid.replaceWith(newGrid);
+  setTimeout(() => {
+    // ── Reset state while card is invisible ───────────────────────────────
+    questionStartTime = Date.now();
+    card.classList.remove('correct', 'wrong', 'card-exit');
+    const fb = $('feedback-msg');
+    fb.textContent = ''; fb.className = 'feedback';
 
-  // ── Generate new question ─────────────────────────────────────────────
-  const q = generateQuestion(selectedOp);
-  currentAnswer = q.answer;
-  const { display } = q;
-  renderQuestion._currentEquation = `${display.a} ${display.op} ${display.b}`;
+    // ── Replace choices grid ─────────────────────────────────────────────
+    const oldGrid = $('choices-grid');
+    const newGrid = document.createElement('div');
+    newGrid.id        = 'choices-grid';
+    newGrid.className = 'choices-grid';
+    oldGrid.replaceWith(newGrid);
 
-  $('q-label').textContent   = t('questionOf')(currentQ + 1, totalQ);
-  $('q-counter').textContent = `${currentQ + 1}/${totalQ}`;
-  $('q-equation').innerHTML  = `<span>${display.a}</span><span class="q-eq-op">${display.op}</span><span>${display.b}</span><span class="q-eq-op">=</span><span class="q-eq-box">?</span>`;
+    // ── Generate new question ────────────────────────────────────────────
+    const q = generateQuestion(selectedOp);
+    currentAnswer = q.answer;
+    const { display } = q;
+    renderQuestion._currentEquation = `${display.a} ${display.op} ${display.b}`;
 
-  if (selectedMode === 'quiz') {
-    $('numpad-wrap').style.display = 'none';
-    generateChoices(currentAnswer, selectedOp).forEach(c => {
-      const div = document.createElement('div');
-      div.className   = 'choice-btn';
-      div.textContent = c;
-      div.setAttribute('role', 'button');
-      div.setAttribute('tabindex', '0');
-      div.addEventListener('pointerdown', e => { e.preventDefault(); handleAnswer(c, div); });
-      div.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleAnswer(c, div); });
-      newGrid.appendChild(div);
-    });
-    // Reveal after a brief delay, then unblock input.
-    setTimeout(() => {
-      newGrid.classList.remove('choices-hidden');
-      card.classList.remove('input-blocked');
-    }, 50);
-  } else {
-    newGrid.style.display = 'none';
-    $('numpad-wrap').style.display = '';
-    renderNumpad();
-  }
+    $('q-label').textContent   = t('questionOf')(currentQ + 1, totalQ);
+    $('q-counter').textContent = `${currentQ + 1}/${totalQ}`;
+    $('q-equation').innerHTML  = `<span>${display.a}</span><span class="q-eq-op">${display.op}</span><span>${display.b}</span><span class="q-eq-op">=</span><span class="q-eq-box">?</span>`;
+
+    if (selectedMode === 'quiz') {
+      $('numpad-wrap').style.display = 'none';
+      generateChoices(currentAnswer, selectedOp).forEach(c => {
+        const div = document.createElement('div');
+        div.className   = 'choice-btn';
+        div.textContent = c;
+        div.setAttribute('role', 'button');
+        div.setAttribute('tabindex', '0');
+        div.addEventListener('pointerdown', e => { e.preventDefault(); handleAnswer(c, div); });
+        div.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleAnswer(c, div); });
+        newGrid.appendChild(div);
+      });
+    } else {
+      newGrid.style.display = 'none';
+      $('numpad-wrap').style.display = '';
+      renderNumpad();
+    }
+
+    // Animate card back in
+    card.classList.remove('input-blocked');
+    card.classList.add('card-enter');
+    setTimeout(() => card.classList.remove('card-enter'), 300);
+
+  }, 200); // wait for exit animation to complete
 }
 
 // ══════════════════════════════════════════
@@ -528,15 +533,7 @@ function handleAnswer(chosen, btnEl) {
 
   const card=$('question-card'), fb=$('feedback-msg');
   if(selectedMode==='quiz') {
-    // Block all touch/pointer events on the card immediately.
-    // iOS fires a delayed visual tap-highlight on whatever element sits at
-    // the tapped coordinates when it next paints. The blocker overlay ensures
-    // the new buttons are unreachable by that ghost event.
     card.classList.add('input-blocked');
-
-    const grid = $('choices-grid');
-    if (grid) grid.classList.add('choices-hidden');
-
     document.querySelectorAll('.choice-btn').forEach(b => b.setAttribute('data-answered','1'));
     if(wasCorrect) {
       correct++; card.classList.add('correct');
