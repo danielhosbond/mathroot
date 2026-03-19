@@ -575,16 +575,6 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 }
 .btn-cancel:hover { border-color: var(--red); color: var(--red); background: var(--cancel-hover-bg); }
 
-.btn-restart {
-  display: inline-flex; align-items: center; gap: 8px;
-  height: 48px; padding: 0 28px;
-  background: linear-gradient(135deg, var(--orange), var(--orange-end));
-  border: none; border-radius: 10px; color: #fff;
-  font-family: 'Syne', sans-serif; font-size: .95rem; font-weight: 700;
-  cursor: pointer; letter-spacing: .3px;
-  transition: opacity .2s, transform .15s; box-shadow: 0 4px 24px var(--orange-glow);
-}
-.btn-restart:hover { opacity: .9; transform: translateY(-1px); }
 
 .btn-secondary {
   display: inline-flex; align-items: center; gap: 8px;
