@@ -467,13 +467,19 @@ function renderQuestion() {
       $('numpad-wrap').style.display = 'none';
       generateChoices(currentAnswer, selectedOp).forEach(c => {
         const div = document.createElement('div');
-        div.className   = 'choice-btn';
+        div.className   = 'choice-btn no-touch-feedback';
         div.textContent = c;
         div.setAttribute('role', 'button');
         div.setAttribute('tabindex', '0');
         div.addEventListener('pointerdown', e => { e.preventDefault(); handleAnswer(c, div); });
         div.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleAnswer(c, div); });
         newGrid.appendChild(div);
+      });
+      // Remove the guard class after iOS has fully cleared any residual touch state
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          newGrid.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('no-touch-feedback'));
+        });
       });
     } else {
       newGrid.style.display = 'none';
