@@ -543,9 +543,15 @@ function handleAnswer(chosen, btnEl) {
     document.querySelectorAll('.choice-btn').forEach(b => b.setAttribute('data-answered','1'));
     if(wasCorrect) {
       correct++; card.classList.add('correct');
+      if(btnEl) btnEl.classList.add('correct-choice');
       fb.textContent=t('correctFeedback'); fb.className='feedback correct show';
     } else {
       wrong++; card.classList.add('wrong');
+      if(btnEl) btnEl.classList.add('wrong-choice');
+      // Also highlight the correct answer
+      document.querySelectorAll('.choice-btn').forEach(b => {
+        if(parseInt(b.textContent)===currentAnswer) b.classList.add('correct-choice');
+      });
       card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400);
       fb.textContent=t('wrongFeedback')(currentAnswer); fb.className='feedback wrong show';
     }
