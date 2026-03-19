@@ -31,7 +31,7 @@ const TRANSLATIONS = {
     // Page title
     pageTitle: 'MathRoot — Math Trainer',
     // Hero
-    heroTitle: 'Train your<br/><span>math skills.</span><span class="cursor"></span>',
+    heroTitle: 'Train your <span>math skills.</span><span class="cursor"></span>',
     heroTagline: 'Pick an operation, choose how many questions, and beat your score.',
     // Home sections
     chooseOperation: 'Choose operation',
@@ -117,7 +117,7 @@ const TRANSLATIONS = {
 
   da: {
     pageTitle: 'MathRoot — Matematiktræner',
-    heroTitle: 'Træn dine<br/><span>matematikfærdigheder.</span><span class="cursor"></span>',
+    heroTitle: 'Træn din <span>matematik.</span><span class="cursor"></span>',
     heroTagline: 'Vælg en regningsart, antal spørgsmål og slå din rekord.',
     chooseOperation: 'Vælg regningsart',
     numberOfQuestions: 'Antal spørgsmål',
@@ -262,6 +262,11 @@ function applyLang() {
   // Rebuild dynamic sections that depend on language
   buildGradeMenu();
   selectGrade(selectedGrade, false); // refresh pills without closing menu
+
+  // Re-render quiz section dynamic text if visible
+  if ($('quiz-section').classList.contains('visible')) {
+    $('q-label').textContent = t('questionOf')(currentQ + 1, totalQ);
+  }
 
   // Re-render result section if visible
   if ($('result-section').classList.contains('visible') && allSessions.length > 0) {
