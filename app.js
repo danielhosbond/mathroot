@@ -262,6 +262,19 @@ function applyLang() {
   // Rebuild dynamic sections that depend on language
   buildGradeMenu();
   selectGrade(selectedGrade, false); // refresh pills without closing menu
+
+  // Re-render result section if visible
+  if ($('result-section').classList.contains('visible') && allSessions.length > 0) {
+    refreshResultSection(allSessions[0]);
+  }
+
+  // Re-render detail section if visible
+  if ($('detail-section').classList.contains('visible') && detailIndex !== null) {
+    openDetail(detailIndex);
+  }
+
+  // Re-render history list
+  renderHistory();
 }
 
 // ══════════════════════════════════════════
@@ -695,25 +708,30 @@ function showResults(cancelled) {
   const session={id:Date.now(),op:selectedOp,grade:selectedGrade,mode:selectedMode,totalQ,correct,wrong:answeredCount-correct,pct,totalSessionMs,avgMs,answeredCount,cancelled,timestamp:Date.now(),log:[...sessionLog]};
   allSessions.unshift(session);
 
-  $('res-correct').textContent=correct; $('res-wrong').textContent=wrong;
-  $('res-pct').textContent=pct+'%'; $('res-duration').textContent=fmtMs(totalSessionMs);
-  $('res-avg').textContent=answeredCount>0?fmtMsShort(avgMs):'—';
-  $('res-grade-badge').textContent=TRANSLATIONS[currentLang].gradeLabel(selectedGrade);
-  $('res-mode-badge').textContent=t(MODE_KEYS[selectedMode]);
+  refreshResultSection(session);
+}
 
-  if(cancelled) {
+function refreshResultSection(session) {
+  const s = session;
+  $('res-correct').textContent=s.correct; $('res-wrong').textContent=s.wrong;
+  $('res-pct').textContent=s.pct+'%'; $('res-duration').textContent=fmtMs(s.totalSessionMs);
+  $('res-avg').textContent=s.answeredCount>0?fmtMsShort(s.avgMs):'—';
+  $('res-grade-badge').textContent=TRANSLATIONS[currentLang].gradeLabel(s.grade);
+  $('res-mode-badge').textContent=t(MODE_KEYS[s.mode]);
+
+  if(s.cancelled) {
     $('result-emoji').textContent='🛑';
     $('result-title').textContent=t('titleStopped');
-    $('result-sub').textContent=t('subStopped')(answeredCount,totalQ,correct);
+    $('result-sub').textContent=t('subStopped')(s.answeredCount,s.totalQ,s.correct);
   } else {
-    let emoji='😔',title=t('titleKeepTrying'),sub=t('subKeepTrying')(correct,totalQ);
-    if(pct===100){emoji='🏆';title=t('titlePerfect');sub=t('subPerfect');}
-    else if(pct>=80){emoji='🎉';title=t('titleGreat');sub=t('subGreat')(correct,totalQ);}
-    else if(pct>=60){emoji='👍';title=t('titleGood');sub=t('subGood')(correct,totalQ);}
-    else if(pct>=40){emoji='💪';title=t('titleKeepGoing');sub=t('subKeepGoing')(correct,totalQ);}
+    let emoji='😔',title=t('titleKeepTrying'),sub=t('subKeepTrying')(s.correct,s.totalQ);
+    if(s.pct===100){emoji='🏆';title=t('titlePerfect');sub=t('subPerfect');}
+    else if(s.pct>=80){emoji='🎉';title=t('titleGreat');sub=t('subGreat')(s.correct,s.totalQ);}
+    else if(s.pct>=60){emoji='👍';title=t('titleGood');sub=t('subGood')(s.correct,s.totalQ);}
+    else if(s.pct>=40){emoji='💪';title=t('titleKeepGoing');sub=t('subKeepGoing')(s.correct,s.totalQ);}
     $('result-emoji').textContent=emoji; $('result-title').textContent=title; $('result-sub').textContent=sub;
   }
-  renderSummaryList($('summary-list'),$('summary-count'),sessionLog);
+  renderSummaryList($('summary-list'),$('summary-count'),s.log);
 }
 
 // ══════════════════════════════════════════
