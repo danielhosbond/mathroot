@@ -686,10 +686,12 @@ header { display: flex; align-items: center; justify-content: space-between; pad
    RESPONSIVE
 ══════════════════════════════════════════ */
 @media (max-width: 600px) {
-  .op-grid    { grid-template-columns: repeat(2,1fr); }
+  .op-grid    { grid-template-columns: repeat(4,1fr); gap: 8px; }
+  .op-card    { padding: 14px 6px; }
+  .op-symbol  { font-size: 1.3rem; margin-bottom: 4px; }
+  .op-name    { font-size: .65rem; }
   .count-grid { grid-template-columns: repeat(4,1fr); gap: 8px; }
   .count-number { font-size: 1.3rem; }
-  .op-symbol  { font-size: 1.5rem; }
   .q-equation { font-size: 2rem; gap: 10px; }
   .q-equation-stacked { font-size: clamp(1.6rem,6vw,2.4rem); }
   .result-stats { gap: 16px; }
