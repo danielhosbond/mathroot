@@ -720,6 +720,17 @@ function closeDetail(){hide('detail-section');goHome();}
 // ══════════════════════════════════════════
 function replaySession() { const op=selectedOp; goHome(); setTimeout(()=>{selectOpByName(op);startQuiz();},20); }
 function goHome() {
+  // If a quiz is active with answers, save it as a stopped session
+  if ($('quiz-section').classList.contains('visible') && sessionLog.length > 0) {
+    stopSessionClock();
+    const totalSessionMs = Date.now() - sessionStartTime;
+    const answeredCount = sessionLog.length;
+    const pct = answeredCount > 0 ? Math.round((correct / answeredCount) * 100) : 0;
+    const avgMs = answeredCount > 0 ? sessionLog.reduce((s, e) => s + e.elapsedMs, 0) / answeredCount : 0;
+    const session = { id: Date.now(), op: selectedOp, grade: selectedGrade, mode: selectedMode, totalQ, correct, wrong: answeredCount - correct, pct, totalSessionMs, avgMs, answeredCount, cancelled: true, timestamp: Date.now(), log: [...sessionLog] };
+    allSessions.unshift(session);
+    sessionLog = [];
+  }
   stopSessionClock();
   hide('result-section'); hide('quiz-section'); hide('detail-section');
   $('home-section').style.display='';
