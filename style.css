@@ -358,8 +358,13 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   user-select: none; -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-.choice-btn:hover { border-color: var(--orange); background: var(--surface); transform: translateY(-1px); }
-.choice-btn[data-answered] { cursor: default; }
+@media (hover: hover) {
+  .choice-btn:hover { border-color: var(--orange); background: var(--surface); transform: translateY(-1px); }
+}
+.choice-btn:active { border-color: var(--orange); background: var(--surface); transform: translateY(-1px); }
+.choice-btn[data-answered] { cursor: default; pointer-events: none; }
+.choice-btn[data-answered]:hover,
+.choice-btn[data-answered]:active { border-color: var(--border); background: var(--surface2); transform: none; }
 .choice-btn.correct-choice { border-color: var(--green); background: rgba(52,211,153,.08); color: var(--green); }
 .choice-btn.wrong-choice   { border-color: var(--red);   background: rgba(248,113,113,.08); color: var(--red); }
 
@@ -370,6 +375,15 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .question-card.input-blocked * {
   pointer-events: none;
   -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Temporarily suppress all feedback on freshly-created buttons */
+.choice-btn.no-touch-feedback,
+.choice-btn.no-touch-feedback:hover,
+.choice-btn.no-touch-feedback:active {
+  border-color: var(--border) !important;
+  background: var(--surface2) !important;
+  transform: none !important;
 }
 
 /* ══════════════════════════════════════════
