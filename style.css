@@ -362,11 +362,13 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   .choice-btn:hover { border-color: var(--orange); background: var(--surface); transform: translateY(-1px); }
 }
 .choice-btn:active { border-color: var(--orange); background: var(--surface); transform: translateY(-1px); }
-.choice-btn[data-answered] { cursor: default; pointer-events: none; }
+.choice-btn[data-answered] { cursor: default; }
 .choice-btn[data-answered]:hover,
 .choice-btn[data-answered]:active { border-color: var(--border); background: var(--surface2); transform: none; }
-.choice-btn.correct-choice { border-color: var(--green); background: rgba(52,211,153,.08); color: var(--green); }
-.choice-btn.wrong-choice   { border-color: var(--red);   background: rgba(248,113,113,.08); color: var(--red); }
+.choice-btn.correct-choice,
+.choice-btn.correct-choice[data-answered] { border-color: var(--green); background: rgba(52,211,153,.08); color: var(--green); transform: none; }
+.choice-btn.wrong-choice,
+.choice-btn.wrong-choice[data-answered]   { border-color: var(--red);   background: rgba(248,113,113,.08); color: var(--red); transform: none; }
 
 /* Blocks ghost tap-highlights on iOS during question transition */
 .question-card.input-blocked {
