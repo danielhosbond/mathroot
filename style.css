@@ -191,12 +191,12 @@ header { display: flex; align-items: center; justify-content: space-between; pad
    HERO
 ══════════════════════════════════════════ */
 .hero { text-align: center; padding: 20px 0 48px; }
-.hero h1 { font-size: clamp(2.2rem,6vw,3.4rem); font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 14px; }
+.hero h1 { font-size: clamp(1.6rem,5vw,3.4rem); font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 14px; white-space: nowrap; }
 .hero h1 span { color: var(--orange-light); }
-.hero-tagline { color: var(--muted); font-size: 1.05rem; max-width: 440px; margin: 0 auto 20px; line-height: 1.6; }
+.hero-tagline { color: var(--muted); font-size: clamp(.7rem, 2.6vw, 1.05rem); margin: 0 auto 20px; line-height: 1.6; white-space: nowrap; }
 
 .grade-info { display: flex; justify-content: center; }
-.grade-pills { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.grade-pills { display: inline-flex; flex-wrap: nowrap; justify-content: center; gap: 8px; }
 .grade-pill {
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px;
@@ -707,9 +707,10 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   .btn-cancel     { font-size: .65rem; padding: 0 10px; }
   .numpad-btn     { height: 50px; font-size: 1.1rem; }
   .numpad-display { font-size: 2rem; }
-  .grade-pills    { gap: 6px; }
-  .grade-pill     { padding: 5px 10px; }
-  .grade-pill-range { font-size: .65rem; }
+  .grade-pills    { gap: 4px; }
+  .grade-pill     { padding: 4px 6px; gap: 3px; }
+  .grade-pill-op  { font-size: .7rem; min-width: 10px; }
+  .grade-pill-range { font-size: .55rem; }
 }
 
 /* ══════════════════════════════════════════
