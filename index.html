@@ -202,86 +202,107 @@
        RESULT SECTION
   ════════════════════════════════════════ -->
   <div id="result-section">
-    <div class="result-card">
-      <span class="result-emoji" id="result-emoji">🎉</span>
-      <h2><span data-i18n="session"></span> <span id="result-title"></span></h2>
-      <p class="result-sub" id="result-sub"></p>
-      <div class="result-stats">
-        <div class="score-item">
-          <div class="result-stat-val green" id="res-correct">—</div>
-          <div class="result-stat-label" data-i18n="correct"></div>
-        </div>
-        <div class="score-item">
-          <div class="result-stat-val red" id="res-wrong">—</div>
-          <div class="result-stat-label" data-i18n="wrong"></div>
-        </div>
-        <div class="score-item">
-          <div class="result-stat-val grape" id="res-pct">—</div>
-          <div class="result-stat-label" data-i18n="score"></div>
-        </div>
-        <div class="score-item">
-          <div class="result-stat-val" id="res-duration">—</div>
-          <div class="result-stat-label" data-i18n="duration"></div>
-        </div>
-        <div class="score-item">
-          <div class="result-stat-val" id="res-avg">—</div>
-          <div class="result-stat-label" data-i18n="avgPerQuestion"></div>
+
+    <!-- compact result banner -->
+    <div class="res-banner">
+      <div class="res-banner-top">
+        <div class="res-identity">
+          <span class="res-emoji" id="result-emoji">🎉</span>
+          <div class="res-text">
+            <div class="res-title" id="result-title"></div>
+            <div class="res-sub" id="result-sub"></div>
+          </div>
         </div>
       </div>
-      <div class="result-badge-row">
+      <div class="res-scoreband">
+        <div class="res-stat">
+          <span class="res-stat-val green" id="res-correct">—</span>
+          <span class="res-stat-lbl" data-i18n="correct"></span>
+        </div>
+        <div class="res-divider"></div>
+        <div class="res-stat">
+          <span class="res-stat-val red" id="res-wrong">—</span>
+          <span class="res-stat-lbl" data-i18n="wrong"></span>
+        </div>
+        <div class="res-divider"></div>
+        <div class="res-stat">
+          <span class="res-stat-val grape" id="res-pct">—</span>
+          <span class="res-stat-lbl" data-i18n="score"></span>
+        </div>
+        <div class="res-divider"></div>
+        <div class="res-stat">
+          <span class="res-stat-val" id="res-duration">—</span>
+          <span class="res-stat-lbl" data-i18n="duration"></span>
+        </div>
+        <div class="res-divider"></div>
+        <div class="res-stat">
+          <span class="res-stat-val" id="res-avg">—</span>
+          <span class="res-stat-lbl" data-i18n="avgPerQuestion"></span>
+        </div>
+      </div>
+      <div class="res-badge-row">
         <span class="badge-grade" id="res-grade-badge"></span>
         <span class="badge-mode"  id="res-mode-badge"></span>
       </div>
-      <div class="result-actions">
+      <div class="res-banner-footer">
         <button class="btn-secondary" onclick="goHome()" data-i18n="backToOverview"></button>
       </div>
     </div>
+
     <div class="summary-header">
       <div class="section-label" style="margin-bottom:0;" data-i18n="questionSummary"></div>
       <span class="summary-count" id="summary-count"></span>
     </div>
     <div class="summary-list" id="summary-list"></div>
-    <div class="summary-footer">
-      <button class="btn-secondary" onclick="goHome()" data-i18n="backToOverview"></button>
-    </div>
+
   </div><!-- /#result-section -->
 
   <!-- ════════════════════════════════════════
        SESSION DETAIL
   ════════════════════════════════════════ -->
   <div id="detail-section">
-    <div class="detail-header">
-      <button class="btn-secondary" onclick="closeDetail()" data-i18n="backToOverview"></button>
-    </div>
-    <div class="result-card">
-      <span class="result-emoji" id="detail-emoji">🎉</span>
-      <h2><span data-i18n="session"></span> <span id="detail-title">—</span></h2>
-      <p class="result-sub" id="detail-sub">—</p>
-      <div class="result-stats">
-        <div class="score-item">
-          <div class="result-stat-val green" id="detail-correct">—</div>
-          <div class="result-stat-label" data-i18n="correct"></div>
-        </div>
-        <div class="score-item">
-          <div class="result-stat-val red" id="detail-wrong">—</div>
-          <div class="result-stat-label" data-i18n="wrong"></div>
-        </div>
-        <div class="score-item">
-          <div class="result-stat-val grape" id="detail-pct">—</div>
-          <div class="result-stat-label" data-i18n="score"></div>
-        </div>
-        <div class="score-item">
-          <div class="result-stat-val" id="detail-duration">—</div>
-          <div class="result-stat-label" data-i18n="duration"></div>
-        </div>
-        <div class="score-item">
-          <div class="result-stat-val" id="detail-avg">—</div>
-          <div class="result-stat-label" data-i18n="avgPerQuestion"></div>
+    <div class="res-banner">
+      <div class="res-banner-top">
+        <div class="res-identity">
+          <span class="res-emoji" id="detail-emoji">🎉</span>
+          <div class="res-text">
+            <div class="res-title" id="detail-title">—</div>
+            <div class="res-sub" id="detail-sub">—</div>
+          </div>
         </div>
       </div>
-      <div class="result-badge-row">
+      <div class="res-scoreband">
+        <div class="res-stat">
+          <span class="res-stat-val green" id="detail-correct">—</span>
+          <span class="res-stat-lbl" data-i18n="correct"></span>
+        </div>
+        <div class="res-divider"></div>
+        <div class="res-stat">
+          <span class="res-stat-val red" id="detail-wrong">—</span>
+          <span class="res-stat-lbl" data-i18n="wrong"></span>
+        </div>
+        <div class="res-divider"></div>
+        <div class="res-stat">
+          <span class="res-stat-val grape" id="detail-pct">—</span>
+          <span class="res-stat-lbl" data-i18n="score"></span>
+        </div>
+        <div class="res-divider"></div>
+        <div class="res-stat">
+          <span class="res-stat-val" id="detail-duration">—</span>
+          <span class="res-stat-lbl" data-i18n="duration"></span>
+        </div>
+        <div class="res-divider"></div>
+        <div class="res-stat">
+          <span class="res-stat-val" id="detail-avg">—</span>
+          <span class="res-stat-lbl" data-i18n="avgPerQuestion"></span>
+        </div>
+      </div>
+      <div class="res-badge-row">
         <span class="badge-grade" id="detail-grade-badge"></span>
         <span class="badge-mode"  id="detail-mode-badge"></span>
+      </div>
+      <div class="res-banner-footer">
+        <button class="btn-secondary" onclick="closeDetail()" data-i18n="backToOverview"></button>
       </div>
     </div>
     <div class="summary-header">
@@ -289,9 +310,6 @@
       <span class="summary-count" id="detail-count"></span>
     </div>
     <div class="summary-list" id="detail-list"></div>
-    <div class="summary-footer">
-      <button class="btn-secondary" onclick="closeDetail()" data-i18n="backToOverview"></button>
-    </div>
   </div><!-- /#detail-section -->
 
 </div><!-- /.wrap -->
