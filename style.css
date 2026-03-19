@@ -37,10 +37,10 @@
 
 /* ── Light theme ── */
 html[data-theme="light"] {
-  --bg:           #f5f5f7;
-  --surface:      #ffffff;
-  --surface2:     #eeeef2;
-  --border:       #d4d4dc;
+  --bg:           #ededf0;
+  --surface:      #f5f5f7;
+  --surface2:     #e6e6ec;
+  --border:       #cdcdd6;
   --orange:       #d45a08;
   --orange-light: #e07820;
   --orange-glow:  rgba(212,90,8,0.15);
