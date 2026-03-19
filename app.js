@@ -1,4 +1,29 @@
 // ══════════════════════════════════════════
+// THEME
+// ══════════════════════════════════════════
+function getPreferredTheme() {
+  const saved = localStorage.getItem('mathroot-theme');
+  if (saved) return saved;
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const icon = document.getElementById('theme-icon');
+  if (icon) icon.textContent = theme === 'light' ? '🌙' : '☀️';
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('mathroot-theme', next);
+  applyTheme(next);
+}
+
+// Apply theme immediately (before DOM-dependent init)
+applyTheme(getPreferredTheme());
+
+// ══════════════════════════════════════════
 // TRANSLATIONS
 // ══════════════════════════════════════════
 const TRANSLATIONS = {
@@ -407,13 +432,35 @@ function generateChoices(answer, op) {
       if (c > 0) choices.add(c);
     }
   } else {
-    const ud  = answer % 10;
-    const mag = Math.max(10, Math.pow(10, Math.floor(Math.log10(answer))));
-    const steps = [1,2,3,4,5,9,10,11].map(n => n*mag);
-    const offs = []; for (const s of steps) offs.push(s,-s);
-    offs.sort(() => Math.random()-.5);
-    for (const o of offs) { if (choices.size>=4) break; const c=answer+o; if (c>0&&c!==answer&&c%10===ud) choices.add(c); }
-    let step=mag; while(choices.size<4&&step<=answer*10){ for(const sg of[1,-1]){ if(choices.size>=4)break; const c=answer+sg*step; if(c>0&&c%10===ud)choices.add(c); } step+=mag; }
+    // Addition / subtraction: generate close distractors that mimic
+    // common arithmetic mistakes (carry errors, off-by-ten, etc.)
+    const offsets = [];
+
+    // Small offsets: ±1 to ±9 (ones-place mistakes)
+    for (let d = 1; d <= 9; d++) { offsets.push(d, -d); }
+
+    // Tens-place mistakes: ±10, ±20, ±30 …
+    for (let d = 10; d <= 50; d += 10) { offsets.push(d, -d); }
+
+    // Carry/borrow errors: ±100, ±200
+    if (answer > 200) { offsets.push(100, -100, 200, -200); }
+
+    // Shuffle and pick distractors close to the answer
+    offsets.sort(() => Math.random() - 0.5);
+
+    for (const o of offsets) {
+      if (choices.size >= 4) break;
+      const c = answer + o;
+      if (c > 0 && c !== answer) choices.add(c);
+    }
+
+    // Fallback: if we still need more, use very small random offsets
+    let tries = 0;
+    while (choices.size < 4 && tries < 50) {
+      const c = answer + randInt(1, 20) * (Math.random() < 0.5 ? 1 : -1);
+      if (c > 0 && c !== answer) choices.add(c);
+      tries++;
+    }
   }
   return [...choices].sort(() => Math.random() - 0.5);
 }
@@ -461,7 +508,36 @@ function renderQuestion() {
 
     $('q-label').textContent   = t('questionOf')(currentQ + 1, totalQ);
     $('q-counter').textContent = `${currentQ + 1}/${totalQ}`;
-    $('q-equation').innerHTML  = `<span>${display.a}</span><span class="q-eq-op">${display.op}</span><span>${display.b}</span><span class="q-eq-op">=</span><span class="q-eq-box">?</span>`;
+
+    const eqEl = $('q-equation');
+    if (display.op === '+' || display.op === '−') {
+      // ── Vertical (stacked) layout for addition / subtraction ──
+      // For addition, put the larger number on top (a+b = b+a).
+      // For subtraction, a is already the larger number (minuend).
+      const numTop = display.op === '+' ? Math.max(display.a, display.b) : display.a;
+      const numBot = display.op === '+' ? Math.min(display.a, display.b) : display.b;
+      const top = String(numTop);
+      const bot = String(numBot);
+      const maxLen = Math.max(top.length, bot.length);
+      const fs = '\u2007'; // figure space — same width as a digit in monospace
+      // Pad top number: extra 2 chars on the left to match the op+space prefix on the bottom row
+      const padTop = (fs + fs + top).padStart(maxLen + 2, fs);
+      // Bottom row: operator + figure-space + right-aligned number
+      const padBot = bot.padStart(maxLen, fs);
+
+      eqEl.className = 'q-equation q-equation-stacked';
+      eqEl.innerHTML =
+        `<div class="q-stack">` +
+          `<div class="q-stack-row q-stack-top">${padTop}</div>` +
+          `<div class="q-stack-row q-stack-bot"><span class="q-stack-op">${display.op}</span>${fs}${padBot}</div>` +
+          `<div class="q-stack-line"></div>` +
+          `<div class="q-stack-row q-stack-ans">?</div>` +
+        `</div>`;
+    } else {
+      // ── Horizontal layout for multiplication / division ──
+      eqEl.className = 'q-equation';
+      eqEl.innerHTML = `<span>${display.a}</span><span class="q-eq-op">${display.op}</span><span>${display.b}</span><span class="q-eq-op">=</span><span class="q-eq-box">?</span>`;
+    }
 
     if (selectedMode === 'quiz') {
       $('numpad-wrap').style.display = 'none';
