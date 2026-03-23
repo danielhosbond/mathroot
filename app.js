@@ -128,6 +128,9 @@ const TRANSLATIONS = {
     catTime: 'Time',
     catArea: 'Area',
     convReference: 'Reference',
+    // Times table
+    timesTable: 'Times Tables',
+    chooseTable: 'Choose table',
     unitLabels: {
       km:'km', m:'m', cm:'cm', mm:'mm',
       kg:'kg', g:'g', mg:'mg',
@@ -229,6 +232,9 @@ const TRANSLATIONS = {
     catTime: 'Tid',
     catArea: 'Areal',
     convReference: 'Reference',
+    // Times table
+    timesTable: 'Gangetabel',
+    chooseTable: 'Vælg tabel',
     unitLabels: {
       km:'km', m:'m', cm:'cm', mm:'mm',
       kg:'kg', g:'g', mg:'mg',
@@ -373,6 +379,7 @@ let answered      = false;
 let sessionLog    = [];
 let numpadValue   = '';
 
+let usedEquations     = new Set();
 let sessionStartTime  = null;
 let questionStartTime = null;
 let sessionTimerID    = null;
@@ -381,6 +388,7 @@ let allSessions = [];
 let detailIndex = null;
 let practiceType     = 'math';
 let selectedCategory = null;
+let selectedTable    = null;
 
 // ══════════════════════════════════════════
 // SCORING
@@ -463,11 +471,13 @@ function selectPracticeType(el) {
   document.querySelectorAll('.practice-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   practiceType = el.dataset.type;
-  selectedOp = null; selectedCategory = null;
+  selectedOp = null; selectedCategory = null; selectedTable = null;
   $('start-btn').disabled = true;
   document.querySelectorAll('.op-card').forEach(c => c.classList.remove('active'));
-  $('op-grid-wrap').style.display    = practiceType === 'math' ? '' : 'none';
-  $('conv-grid-wrap').style.display  = practiceType === 'conversions' ? '' : 'none';
+  document.querySelectorAll('.times-card').forEach(c => c.classList.remove('active'));
+  $('op-grid-wrap').style.display     = practiceType === 'math' ? '' : 'none';
+  $('conv-grid-wrap').style.display   = practiceType === 'conversions' ? '' : 'none';
+  $('times-grid-wrap').style.display  = practiceType === 'times-table' ? '' : 'none';
 }
 
 function selectCategory(el) {
@@ -475,6 +485,39 @@ function selectCategory(el) {
   el.classList.add('active');
   selectedCategory = el.dataset.cat;
   $('start-btn').disabled = false;
+}
+
+function buildTimesTableGrid() {
+  const grid = $('times-grid');
+  if (!grid) return;
+  grid.innerHTML = Array.from({ length: 20 }, (_, i) => i + 1).map(n => {
+    const active = selectedTable === n ? ' active' : '';
+    return `<div class="times-card${active}" data-table="${n}" onclick="selectTimesTable(this)">${n}</div>`;
+  }).join('');
+}
+
+function selectTimesTable(el) {
+  document.querySelectorAll('.times-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedTable = parseInt(el.dataset.table, 10);
+  $('start-btn').disabled = false;
+}
+
+function generateTimesTableQuestion() {
+  const factor = randInt(1, 12);
+  const flipOrder = Math.random() < 0.5;
+  const a = flipOrder ? factor : selectedTable;
+  const b = flipOrder ? selectedTable : factor;
+  return { display: { a, op: '×', b }, answer: selectedTable * factor };
+}
+
+function equationKey(display, type) {
+  if (type === 'conversions') return `${display.fromValue}${display.fromUnit}>${display.toUnit}`;
+  // Normalize commutative ops so "3+5" and "5+3" count as the same question
+  if (display.op === '+' || display.op === '×') {
+    return `${Math.min(display.a, display.b)}${display.op}${Math.max(display.a, display.b)}`;
+  }
+  return `${display.a}${display.op}${display.b}`;
 }
 
 function renderConvRefBox() {
@@ -744,7 +787,7 @@ function generateChoices(answer, op) {
 // QUIZ FLOW
 // ══════════════════════════════════════════
 function startQuiz() {
-  currentQ=0; correct=0; wrong=0; sessionScore=0; sessionLog=[];
+  currentQ=0; correct=0; wrong=0; sessionScore=0; sessionLog=[]; usedEquations=new Set();
   $('home-section').style.display='none';
   hide('detail-section'); show('quiz-section'); hide('result-section');
   $('session-timer').textContent='0:00';
@@ -776,9 +819,17 @@ function renderQuestion() {
     oldGrid.replaceWith(newGrid);
 
     // ── Generate new question ────────────────────────────────────────────
-    const q = practiceType === 'conversions'
-      ? generateConversionQuestion(selectedCategory)
-      : generateQuestion(selectedOp);
+    let q, eqKey;
+    for (let attempt = 0; attempt < 8; attempt++) {
+      q = practiceType === 'conversions'
+        ? generateConversionQuestion(selectedCategory)
+        : practiceType === 'times-table'
+          ? generateTimesTableQuestion()
+          : generateQuestion(selectedOp);
+      eqKey = equationKey(q.display, practiceType);
+      if (!usedEquations.has(eqKey)) break;
+    }
+    usedEquations.add(eqKey);
     currentAnswer = q.answer;
     const { display } = q;
 
@@ -842,7 +893,7 @@ function renderQuestion() {
       if (practiceType === 'conversions') {
         appendChoiceBtns(generateConversionChoices(currentAnswer, display));
       } else {
-        appendChoiceBtns(generateChoices(currentAnswer, selectedOp));
+        appendChoiceBtns(generateChoices(currentAnswer, practiceType === 'times-table' ? 'multiplication' : selectedOp));
       }
       // Remove the guard class after iOS has fully cleared any residual touch state
       requestAnimationFrame(() => {
@@ -1055,11 +1106,12 @@ function showResults(cancelled) {
   const pct=answeredCount>0?Math.round((correct/answeredCount)*100):0;
   const avgMs=answeredCount>0?sessionLog.reduce((s,e)=>s+e.elapsedMs,0)/answeredCount:0;
   const maxScore=calcMaxScore(selectedMode,selectedGrade,totalQ);
-  const pb=getPersonalBest(selectedOp,selectedGrade,selectedMode);
+  const opKey = practiceType === 'times-table' ? `times-table-${selectedTable}` : selectedOp;
+  const pb=getPersonalBest(opKey,selectedGrade,selectedMode);
   const isNewPb=!cancelled&&sessionScore>pb;
-  if(isNewPb) setPersonalBest(selectedOp,selectedGrade,selectedMode,sessionScore);
+  if(isNewPb) setPersonalBest(opKey,selectedGrade,selectedMode,sessionScore);
 
-  const session={id:Date.now(),op:selectedOp,grade:selectedGrade,mode:selectedMode,practiceType,category:selectedCategory,totalQ,correct,wrong:answeredCount-correct,pct,totalSessionMs,avgMs,answeredCount,cancelled,timestamp:Date.now(),log:[...sessionLog],score:sessionScore,maxScore,isNewPb};
+  const session={id:Date.now(),op:opKey,grade:selectedGrade,mode:selectedMode,practiceType,category:selectedCategory,table:selectedTable,totalQ,correct,wrong:answeredCount-correct,pct,totalSessionMs,avgMs,answeredCount,cancelled,timestamp:Date.now(),log:[...sessionLog],score:sessionScore,maxScore,isNewPb};
   allSessions.unshift(session);
 
   if (!cancelled && pct === 100) launchConfetti();
@@ -1124,6 +1176,8 @@ function renderHistory() {
     if (s.practiceType==='conversions') {
       const cat=CONV_CATEGORIES.find(c=>c.key===s.category);
       sym=cat?cat.icon:'↔'; opLabel=cat?t(cat.labelKey):s.category||'?';
+    } else if (s.practiceType==='times-table') {
+      sym='×'; opLabel=`×${s.table}`;
     } else {
       sym=OP_SYMBOLS[s.op]||'?'; opLabel=t(OP_META_KEYS[s.op]||s.op);
     }
@@ -1156,7 +1210,9 @@ function openDetail(index) {
   const s=allSessions[index];
   const opLabel = s.practiceType==='conversions'
     ? t((CONV_CATEGORIES.find(c=>c.key===s.category)||{}).labelKey||s.category)
-    : t(OP_META_KEYS[s.op]||s.op);
+    : s.practiceType==='times-table'
+      ? `×${s.table}`
+      : t(OP_META_KEYS[s.op]||s.op);
   const modeLabel=t(MODE_KEYS[s.mode]||s.mode);
   const gradeLabel=TRANSLATIONS[currentLang].gradeLabel(s.grade);
 
@@ -1202,7 +1258,8 @@ function goHome() {
     const answeredCount = sessionLog.length;
     const pct = answeredCount > 0 ? Math.round((correct / answeredCount) * 100) : 0;
     const avgMs = answeredCount > 0 ? sessionLog.reduce((s, e) => s + e.elapsedMs, 0) / answeredCount : 0;
-    const session = { id: Date.now(), op: selectedOp, grade: selectedGrade, mode: selectedMode, practiceType, category: selectedCategory, totalQ, correct, wrong: answeredCount - correct, pct, totalSessionMs, avgMs, answeredCount, cancelled: true, timestamp: Date.now(), log: [...sessionLog], score: sessionScore, maxScore: calcMaxScore(selectedMode, selectedGrade, totalQ), isNewPb: false };
+    const opKey = practiceType === 'times-table' ? `times-table-${selectedTable}` : selectedOp;
+    const session = { id: Date.now(), op: opKey, grade: selectedGrade, mode: selectedMode, practiceType, category: selectedCategory, table: selectedTable, totalQ, correct, wrong: answeredCount - correct, pct, totalSessionMs, avgMs, answeredCount, cancelled: true, timestamp: Date.now(), log: [...sessionLog], score: sessionScore, maxScore: calcMaxScore(selectedMode, selectedGrade, totalQ), isNewPb: false };
     allSessions.unshift(session);
     sessionLog = [];
   }
@@ -1212,7 +1269,8 @@ function goHome() {
   $('home-section').style.display='';
   document.querySelectorAll('.op-card').forEach(c=>c.classList.remove('active'));
   document.querySelectorAll('.conv-cat-card').forEach(c=>c.classList.remove('active'));
-  selectedOp=null; selectedCategory=null; $('start-btn').disabled=true;
+  document.querySelectorAll('.times-card').forEach(c=>c.classList.remove('active'));
+  selectedOp=null; selectedCategory=null; selectedTable=null; $('start-btn').disabled=true;
   renderHistory();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1222,3 +1280,4 @@ function goHome() {
 // ══════════════════════════════════════════
 applyLang();
 selectGrade(4);
+buildTimesTableGrid();

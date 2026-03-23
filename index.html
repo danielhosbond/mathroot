@@ -67,10 +67,17 @@
     <div class="practice-toggle" id="practice-toggle">
       <button class="practice-btn active" data-type="math" onclick="selectPracticeType(this)" data-i18n="math"></button>
       <button class="practice-btn" data-type="conversions" onclick="selectPracticeType(this)" data-i18n="conversions"></button>
+      <button class="practice-btn" data-type="times-table" onclick="selectPracticeType(this)" data-i18n="timesTable"></button>
     </div>
 
-    <!-- Picker zone: conversion category ↔ operation (fixed height to prevent layout shift) -->
+    <!-- Picker zone: conversion category ↔ operation ↔ times table (fixed height to prevent layout shift) -->
     <div class="picker-zone">
+
+    <!-- Times table picker -->
+    <div id="times-grid-wrap" style="display:none;">
+      <div class="section-label" data-i18n="chooseTable"></div>
+      <div class="times-grid" id="times-grid"></div>
+    </div>
 
     <!-- Conversion category picker -->
     <div id="conv-grid-wrap" style="display:none;">

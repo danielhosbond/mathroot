@@ -239,7 +239,7 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 /* ══════════════════════════════════════════
    OPERATION GRID
 ══════════════════════════════════════════ */
-.picker-zone { min-height: 175px; }
+.picker-zone { min-height: 200px; }
 .op-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 48px; }
 .op-card { padding: 22px 18px; }
 .op-symbol { font-size: 2rem; font-weight: 800; color: var(--orange-light); margin-bottom: 8px; display: block; font-family: 'Space Mono', monospace; }
@@ -271,6 +271,26 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .conv-cat-card { padding: 18px 10px; }
 .conv-cat-icon { font-size: 1.3rem; }
 .conv-cat-disabled { opacity: .3; cursor: not-allowed; pointer-events: none; }
+/* ══════════════════════════════════════════
+   TIMES TABLE GRID
+══════════════════════════════════════════ */
+.times-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; margin-bottom: 48px; }
+.times-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  cursor: pointer; transition: border-color .2s, transform .15s, box-shadow .2s;
+  text-align: center; position: relative; overflow: hidden;
+  padding: 10px 4px; font-family: 'Space Mono', monospace; font-size: 1rem; font-weight: 700; color: var(--text);
+}
+.times-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--orange-glow), transparent);
+  opacity: 0; transition: opacity .2s;
+}
+.times-card:hover    { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 0 20px var(--orange-glow); }
+.times-card:hover::before { opacity: 1; }
+.times-card.active   { border-color: var(--orange-light); box-shadow: 0 0 28px var(--orange-glow); background: var(--surface2); color: var(--orange-light); }
+.times-card.active::before { opacity: 1; }
+
 
 @media (max-width: 480px) {
   .conv-grid { grid-template-columns: repeat(3, 1fr); }
@@ -802,7 +822,9 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   .hero h1 { font-size: clamp(1.3rem,4.8vw,3.4rem); }
   .hero-tagline { font-size: clamp(.6rem,2.4vw,1.05rem); }
 
-  .picker-zone { min-height: 135px; }
+  .picker-zone { min-height: 160px; }
+  .times-grid { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .times-card { padding: 9px 4px; font-size: .85rem; }
   .op-grid    { grid-template-columns: repeat(4,1fr); gap: 8px; }
   .op-card    { padding: 14px 6px; }
   .op-symbol  { font-size: 1.3rem; margin-bottom: 4px; }
@@ -812,10 +834,20 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   .q-equation { font-size: 2rem; gap: 10px; }
   .q-equation-stacked { font-size: clamp(1.6rem,6vw,2.4rem); }
   .question-card  { padding: 32px 20px; }
-  .res-banner     { padding: 16px 16px 14px; }
-  .res-title      { font-size: 1rem; }
-  .res-sub        { font-size: .72rem; }
-  .res-emoji      { font-size: 1.6rem; }
+  .res-banner        { padding: 14px 14px 12px; }
+  .res-banner-top    { margin-bottom: 10px; }
+  .res-title         { font-size: 1rem; }
+  .res-sub           { font-size: .7rem; }
+  .res-emoji         { font-size: 1.5rem; }
+  .res-score-pts     { font-size: 1.6rem; }
+  .res-score-row     { margin-bottom: 10px; gap: 2px; }
+  .res-stat          { padding: 7px 4px; }
+  .res-badge-row     { margin-top: 8px; }
+  .res-banner-footer { margin-top: 12px; }
+  .summary-list      { gap: 5px; margin-bottom: 20px; }
+  .summary-row       { padding: 8px 10px; gap: 8px; }
+  .summary-eq        { font-size: .78rem; }
+  .summary-score     { display: none; }
   .hist-row       { grid-template-columns: 36px 1fr auto 16px; gap: 10px; }
   .hist-op-badge  { width: 34px; height: 34px; font-size: 1rem; }
   .hist-meta      { font-size: .6rem; }
