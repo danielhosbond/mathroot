@@ -131,6 +131,17 @@ const TRANSLATIONS = {
     // Times table
     timesTable: 'Times Tables',
     chooseTable: 'Choose table',
+    // Print worksheet
+    printWorksheet: 'Print Worksheet',
+    printSavePdf:   'Print / Save as PDF',
+    grade:          'Grade',
+    layout:         'Layout',
+    answerKey:      'Answer key',
+    include:        'Include',
+    exclude:        'Exclude',
+    oneColumn:      '1 Column',
+    twoColumns:     '2 Columns',
+    problems:       (n) => `${n} problem${n !== 1 ? 's' : ''}`,
     unitLabels: {
       km:'km', m:'m', cm:'cm', mm:'mm',
       kg:'kg', g:'g', mg:'mg',
@@ -235,6 +246,17 @@ const TRANSLATIONS = {
     // Times table
     timesTable: 'Gangetabel',
     chooseTable: 'Vælg tabel',
+    // Print worksheet
+    printWorksheet: 'Print arbejdsark',
+    printSavePdf:   'Print / Gem som PDF',
+    grade:          'Klasse',
+    layout:         'Layout',
+    answerKey:      'Facitliste',
+    include:        'Inkluder',
+    exclude:        'Ekskluder',
+    oneColumn:      '1 kolonne',
+    twoColumns:     '2 kolonner',
+    problems:       (n) => `${n} opgave${n !== 1 ? 'r' : ''}`,
     unitLabels: {
       km:'km', m:'m', cm:'cm', mm:'mm',
       kg:'kg', g:'g', mg:'mg',
@@ -579,6 +601,10 @@ function applyLang() {
 
   // Re-render history list
   renderHistory();
+
+  // Rebuild print config UI if open (it uses t() inline)
+  const pcs = $('print-config-section');
+  if (pcs && pcs.style.display !== 'none' && pcs.innerHTML) buildPrintConfigUI();
 }
 
 // ══════════════════════════════════════════
@@ -1328,6 +1354,239 @@ function goHome() {
   selectedOp=null; selectedCategory=null; selectedTable=null; $('start-btn').disabled=true;
   renderHistory();
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ══════════════════════════════════════════
+// PRINT / WORKSHEET
+// ══════════════════════════════════════════
+let printCfg = {
+  type: 'math', op: null, category: null, table: null,
+  grade: 4, answerKey: true,
+};
+
+function openPrintConfig() {
+  $('home-section').style.display = 'none';
+  buildPrintConfigUI();
+  $('print-config-section').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function closePrintConfig() {
+  $('print-config-section').style.display = 'none';
+  $('home-section').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function buildPrintConfigUI() {
+  const el = $('print-config-section');
+  const isTimesTable   = printCfg.type === 'times-table';
+  const isConversions  = printCfg.type === 'conversions';
+  const isPrintReady   = (printCfg.type === 'math'        && printCfg.op)
+                       || (printCfg.type === 'conversions' && printCfg.category)
+                       || (printCfg.type === 'times-table' && printCfg.table);
+
+  const typeButtons = ['math','conversions','times-table'].map(type =>
+    `<button class="practice-btn${printCfg.type===type?' active':''}" data-type="${type}" onclick="printSetType(this)">${type==='times-table'?t('timesTable'):t(type)}</button>`
+  ).join('');
+
+  const opCards = ['addition','subtraction','multiplication','division'].map(op =>
+    `<div class="op-card${printCfg.op===op?' active':''}" data-op="${op}" onclick="printSetOp(this)">
+      <span class="op-symbol">${OP_SYMBOLS[op]}</span>
+      <div class="op-name">${t(op)}</div>
+    </div>`
+  ).join('');
+
+  const catCards = CONV_CATEGORIES.map(cat =>
+    `<div class="op-card conv-cat-card${printCfg.category===cat.key?' active':''}" data-cat="${cat.key}" onclick="printSetCat(this)">
+      <span class="op-symbol conv-cat-icon">${cat.icon}</span>
+      <div class="op-name">${t(cat.labelKey)}</div>
+    </div>`
+  ).join('');
+
+  const tableCards = Array.from({length:20},(_,i)=>i+1).map(n =>
+    `<div class="times-card${printCfg.table===n?' active':''}" data-table="${n}" onclick="printSetTable(this)">${n}</div>`
+  ).join('');
+
+  const gradeButtons = Object.keys(GRADE_CONFIG).map(g =>
+    `<div class="print-grade-btn${parseInt(g)===printCfg.grade?' active':''}" data-grade="${g}" onclick="printSetGrade(this)">${g}</div>`
+  ).join('');
+
+  const akCards = [true,false].map(v =>
+    `<div class="mode-card${printCfg.answerKey===v?' active':''}" data-ak="${v}" onclick="printSetAk(this)" style="padding:16px 12px;">
+      <div class="mode-name">${v?t('include'):t('exclude')}</div>
+    </div>`
+  ).join('');
+
+  el.innerHTML = `
+    <div class="hero" style="padding:14px 0 24px;">
+      <h2 style="font-size:clamp(1.4rem,4vw,2rem);font-weight:800;letter-spacing:-.5px;">${t('printWorksheet')}</h2>
+    </div>
+
+    <div class="section-label">${t('practiceType')}</div>
+    <div class="practice-toggle" style="margin-bottom:32px;">${typeButtons}</div>
+
+    <div class="picker-zone">
+      <div id="print-op-wrap"${isConversions||isTimesTable?' style="display:none;"':''}>
+        <div class="section-label">${t('chooseOperation')}</div>
+        <div class="op-grid">${opCards}</div>
+      </div>
+      <div id="print-conv-wrap"${!isConversions?' style="display:none;"':''}>
+        <div class="section-label">${t('chooseCategory')}</div>
+        <div class="op-grid conv-grid">${catCards}</div>
+      </div>
+      <div id="print-times-wrap"${!isTimesTable?' style="display:none;"':''}>
+        <div class="section-label">${t('chooseTable')}</div>
+        <div class="times-grid">${tableCards}</div>
+      </div>
+    </div>
+
+    <div id="print-grade-wrap"${isTimesTable?' style="display:none;"':''}>
+      <div class="section-label">${t('grade')}</div>
+      <div class="print-grade-grid">${gradeButtons}</div>
+    </div>
+
+    <div class="section-label">${t('answerKey')}</div>
+    <div class="mode-grid" style="grid-template-columns:repeat(2,1fr);">${akCards}</div>
+
+    <div class="start-row" style="gap:12px;flex-wrap:wrap;margin-top:40px;">
+      <button class="btn-secondary" onclick="closePrintConfig()">${t('backToOverview')}</button>
+      <button class="btn-submit" id="print-btn" onclick="printWorksheet()"${isPrintReady?'':' disabled'}>${t('printSavePdf')}</button>
+    </div>
+  `;
+}
+
+function printSetType(el) {
+  $('print-config-section').querySelectorAll('.practice-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  printCfg.type = el.dataset.type; printCfg.op = null; printCfg.category = null; printCfg.table = null;
+  const isTT = printCfg.type === 'times-table', isCV = printCfg.type === 'conversions';
+  $('print-op-wrap').style.display    = (!isTT && !isCV) ? '' : 'none';
+  $('print-conv-wrap').style.display  = isCV ? '' : 'none';
+  $('print-times-wrap').style.display = isTT ? '' : 'none';
+  $('print-grade-wrap').style.display = isTT ? 'none' : '';
+  $('print-btn').disabled = true;
+}
+function printSetOp(el) {
+  $('print-op-wrap').querySelectorAll('.op-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active'); printCfg.op = el.dataset.op; $('print-btn').disabled = false;
+}
+function printSetCat(el) {
+  $('print-conv-wrap').querySelectorAll('.op-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active'); printCfg.category = el.dataset.cat; $('print-btn').disabled = false;
+}
+function printSetTable(el) {
+  $('print-times-wrap').querySelectorAll('.times-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active'); printCfg.table = parseInt(el.dataset.table,10); $('print-btn').disabled = false;
+}
+function printSetGrade(el) {
+  $('print-config-section').querySelectorAll('.print-grade-btn').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active'); printCfg.grade = parseInt(el.dataset.grade,10);
+}
+function printSetAk(el) {
+  el.parentElement.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active'); printCfg.answerKey = el.dataset.ak === 'true';
+}
+
+function getPrintCount() {
+  return printCfg.type === 'math' && (printCfg.op === 'addition' || printCfg.op === 'subtraction') ? 18 : 20;
+}
+
+function generateWorksheet() {
+  // Temporarily swap globals so existing generators use print config values
+  const saved = { grade:selectedGrade, op:selectedOp, table:selectedTable, category:selectedCategory };
+  selectedGrade = printCfg.grade; selectedOp = printCfg.op;
+  selectedTable = printCfg.table; selectedCategory = printCfg.category;
+
+  const localUsed = new Set();
+  const questions = [];
+  for (let i = 0; i < getPrintCount(); i++) {
+    let q, key;
+    for (let attempt = 0; attempt < 10; attempt++) {
+      q = printCfg.type === 'conversions'
+        ? generateConversionQuestion(printCfg.category)
+        : printCfg.type === 'times-table'
+          ? generateTimesTableQuestion()
+          : generateQuestion(printCfg.op);
+      key = equationKey(q.display, printCfg.type);
+      if (!localUsed.has(key)) break;
+    }
+    localUsed.add(key);
+    questions.push({ display: q.display, answer: q.answer });
+  }
+
+  selectedGrade = saved.grade; selectedOp = saved.op;
+  selectedTable = saved.table; selectedCategory = saved.category;
+  return questions;
+}
+
+function formatPrintEq(display, type) {
+  if (type === 'conversions') {
+    return `<span class="print-eq">${cvtFmt(display.fromValue)} ${unitLabel(display.fromUnit, display.fromValue)} = _______ ${unitLabel(display.toUnit, 2)}</span>`;
+  }
+  if (display.op === '+' || display.op === '−') {
+    const top = display.op === '+' ? Math.max(display.a, display.b) : display.a;
+    const bot = display.op === '+' ? Math.min(display.a, display.b) : display.b;
+    return `<div class="print-eq print-eq-stack">
+      <span class="print-stack-top">${top}</span>
+      <span class="print-stack-op">${display.op}</span>
+      <span class="print-stack-num">${bot}</span>
+      <div class="print-stack-line"></div>
+      <div class="print-stack-blank"></div>
+    </div>`;
+  }
+  return `<span class="print-eq">${display.a} ${display.op} ${display.b} = _______</span>`;
+}
+
+function getPrintTitle() {
+  if (printCfg.type === 'conversions') {
+    const cat = CONV_CATEGORIES.find(c => c.key === printCfg.category);
+    return `${cat ? t(cat.labelKey) : ''} ${t('conversions')}`;
+  }
+  if (printCfg.type === 'times-table') return `×${printCfg.table} ${t('timesTable')}`;
+  return `${t(printCfg.op)} ${t('printWorksheet')}`;
+}
+
+function renderPrintSection(questions) {
+  const title   = getPrintTitle();
+  const dateStr = new Date().toLocaleDateString(currentLang==='da'?'da-DK':'en-GB', {year:'numeric',month:'long',day:'numeric'});
+  const gradeMeta = printCfg.type !== 'times-table'
+    ? ` · ${TRANSLATIONS[currentLang].gradeLabel(printCfg.grade)}` : '';
+  const countMeta = t('problems')(getPrintCount());
+
+  const problemsHtml = questions.map((q,i) =>
+    `<div class="print-problem">
+      <span class="print-num">${i+1}.</span>
+      ${formatPrintEq(q.display, printCfg.type)}
+    </div>`
+  ).join('');
+
+  const akHtml = printCfg.answerKey ? `
+    <div class="print-answer-key">
+      <div class="print-ak-header">
+        <div class="print-ak-title">${t('answerKey')} — ${title}</div>
+        <div class="print-ak-meta">${dateStr}${gradeMeta}</div>
+      </div>
+      <div class="print-ak-grid">
+        ${questions.map((q,i)=>`<span><strong>${i+1}.</strong> ${cvtFmt(q.answer)}</span>`).join('')}
+      </div>
+    </div>` : '';
+
+  $('print-section').innerHTML = `
+    <div class="print-header">
+      <div class="print-brand">MathRoot</div>
+      <div class="print-header-center">
+        <div class="print-meta">${dateStr}${gradeMeta} · ${countMeta}</div>
+      </div>
+      <div class="print-name">Name: _________________________&nbsp;&nbsp;Score: _____ / ${questions.length}</div>
+    </div>
+    <div class="print-problems print-cols-${printCfg.type==='math'&&(printCfg.op==='addition'||printCfg.op==='subtraction')?3:2}">${problemsHtml}</div>
+    ${akHtml}`;
+}
+
+function printWorksheet() {
+  const questions = generateWorksheet();
+  renderPrintSection(questions);
+  setTimeout(() => window.print(), 150);
 }
 
 // ══════════════════════════════════════════

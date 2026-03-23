@@ -904,3 +904,99 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   font-family: 'Space Mono', monospace; font-size: .75rem; font-weight: 700; color: var(--text);
 }
 .lang-option.active .lang-name { color: var(--orange-light); }
+
+/* ══════════════════════════════════════════
+   PRINT OPEN BUTTON (home screen)
+══════════════════════════════════════════ */
+.print-open-row { text-align: center; margin-top: 10px; margin-bottom: 4px; }
+.btn-print-open {
+  background: none; border: none; cursor: pointer;
+  font-family: 'Space Mono', monospace; font-size: .65rem; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--muted);
+  text-decoration: underline; text-underline-offset: 3px;
+  padding: 4px 8px; transition: color .15s;
+}
+.btn-print-open:hover { color: var(--orange-light); }
+
+/* ══════════════════════════════════════════
+   PRINT CONFIG — GRADE SELECTOR
+══════════════════════════════════════════ */
+.print-grade-grid {
+  display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; margin-bottom: 48px;
+}
+.print-grade-btn {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  cursor: pointer; transition: border-color .2s, transform .15s, box-shadow .2s;
+  text-align: center; padding: 10px 4px;
+  font-family: 'Space Mono', monospace; font-size: .9rem; font-weight: 700; color: var(--text);
+}
+.print-grade-btn:hover  { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 0 20px var(--orange-glow); }
+.print-grade-btn.active { border-color: var(--orange-light); box-shadow: 0 0 28px var(--orange-glow); background: var(--surface2); color: var(--orange-light); }
+
+/* ══════════════════════════════════════════
+   PRINT SECTION (screen: hidden)
+══════════════════════════════════════════ */
+#print-section { display: none; }
+
+/* ══════════════════════════════════════════
+   @MEDIA PRINT
+══════════════════════════════════════════ */
+@media print {
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+  body { margin: 0; padding: 0; background: #fff; color: #000; }
+  .wrap { display: none !important; }
+
+  #print-section {
+    display: block !important;
+    font-family: 'Space Mono', monospace;
+    padding: 20px 28px;
+    color: #000; background: #fff;
+  }
+
+  /* ── Header ── */
+  .print-header {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+    padding-bottom: 5px; margin-bottom: 8px; border-bottom: 1px solid #ccc;
+  }
+  .print-brand { font-size: .7rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #aaa; padding-top: 3px; white-space: nowrap; }
+  .print-header-center { flex: 1; text-align: center; }
+  .print-title { font-size: 1.05rem; font-weight: 700; letter-spacing: -.3px; }
+  .print-meta  { font-size: .65rem; color: #888; margin-top: 3px; letter-spacing: .3px; }
+  .print-name  { font-size: .75rem; white-space: nowrap; padding-top: 3px; }
+
+  /* ── Problems ── */
+  .print-problems { margin-bottom: 0; }
+  .print-cols-2   { columns: 2; column-gap: 36px; }
+  .print-cols-3   { columns: 3; column-gap: 28px; }
+  .print-cols-3 .print-problem { min-height: 136px; }
+
+  .print-problem {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0; min-height: 84px;
+    border-bottom: 1px solid #e0e0e0; break-inside: avoid;
+  }
+  .print-num { font-size: .68rem; color: #aaa; min-width: 22px; flex-shrink: 0; padding-top: 2px; }
+  .print-eq  { font-size: .95rem; font-weight: 700; }
+
+  /* Stacked addition / subtraction */
+  .print-eq-stack {
+    display: inline-grid;
+    grid-template-columns: 18px 1fr;
+    min-width: 110px;
+    font-size: .95rem; font-weight: 700;
+  }
+  .print-stack-top  { grid-column: 1 / -1; text-align: right; padding-bottom: 1px; }
+  .print-stack-op   { text-align: left; align-self: center; }
+  .print-stack-num  { text-align: right; }
+  .print-stack-line { grid-column: 1 / -1; border-top: 2px solid #000; margin: 4px 0 5px; }
+  .print-stack-blank { grid-column: 1 / -1; height: 24px; }
+
+  /* ── Answer key (page 2) ── */
+  .print-answer-key  { page-break-before: always; padding-top: 20px; }
+  .print-ak-header   { border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 14px; }
+  .print-ak-title    { font-size: .95rem; font-weight: 700; }
+  .print-ak-meta     { font-size: .65rem; color: #888; margin-top: 2px; }
+  .print-ak-grid     { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px 14px; }
+  .print-ak-grid span { font-size: .82rem; }
+}
+
