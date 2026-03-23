@@ -1045,55 +1045,110 @@ function launchConfetti() {
   const W = canvas.width  = window.innerWidth;
   const H = canvas.height = window.innerHeight;
 
-  const COLORS = ['#ff595e','#ffca3a','#6a4c93','#1982c4','#8ac926','#ff924c','#c77dff'];
-  const COUNT  = 120;
+  // Theme-matched palette — oranges dominate, gold for contrast, green for success, white for sparkle
+  const PALETTE = [
+    '#fb923c','#fb923c','#fb923c',  // orange-light (brand, most frequent)
+    '#ea6a10','#f97316',            // orange variants
+    '#ffca3a','#ffca3a',            // gold
+    '#34d399',                      // green accent
+    '#ffffff','#fff8f0',            // white / cream
+  ];
 
-  const pieces = Array.from({ length: COUNT }, () => ({
-    x:     Math.random() * W,
-    y:     Math.random() * -H * 0.5,          // start above viewport
-    w:     6 + Math.random() * 8,
-    h:     10 + Math.random() * 6,
-    color: COLORS[Math.floor(Math.random() * COLORS.length)],
-    angle: Math.random() * Math.PI * 2,
-    spin:  (Math.random() - 0.5) * 0.2,
-    vx:    (Math.random() - 0.5) * 3,
-    vy:    2 + Math.random() * 4,
-  }));
+  const rnd  = (a, b) => a + Math.random() * (b - a);
+  const pick = arr  => arr[Math.floor(Math.random() * arr.length)];
 
-  let frame;
+  // Draw a 4-pointed star centred at (0,0) with outer radius r
+  function star4(r) {
+    const inner = r * 0.38;
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const a   = (i * Math.PI / 4) - Math.PI / 2;
+      const len = i % 2 === 0 ? r : inner;
+      i === 0 ? ctx.moveTo(Math.cos(a)*len, Math.sin(a)*len)
+              : ctx.lineTo(Math.cos(a)*len, Math.sin(a)*len);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Build all particles — first wave immediately, second wave after 320 ms
+  function makeParticles(count, delay) {
+    return Array.from({ length: count }, () => {
+      const t     = Math.random();
+      const shape = t < 0.55 ? 'rect' : t < 0.82 ? 'circle' : 'star';
+      const speed = rnd(10, 26);
+      const ang   = rnd(-Math.PI * 0.92, -Math.PI * 0.08); // wide upward arc
+      return {
+        x:     W * rnd(0.25, 0.75) + rnd(-40, 40),
+        y:     H * rnd(0.75, 0.88),
+        vx:    Math.cos(ang) * speed,
+        vy:    Math.sin(ang) * speed,
+        w:     rnd(7, 14),                  // rect width
+        h:     rnd(12, 20),                 // rect height (long strip)
+        r:     rnd(4, 9),                   // circle / star radius
+        color: pick(PALETTE),
+        angle: rnd(0, Math.PI * 2),
+        spin:  rnd(-0.28, 0.28),
+        shape,
+        glow:  Math.random() < 0.28,        // ~1 in 4 particles glows
+        delay,
+      };
+    });
+  }
+
+  const particles = [...makeParticles(140, 0), ...makeParticles(80, 320)];
+
+  const GRAVITY   = 0.42;
+  const DRAG      = 0.992;
+  const DURATION  = 4200;
+  const FADE_TIME = 900;
   const startTime = Date.now();
-  const DURATION  = 3500; // ms
 
   function draw() {
     const elapsed = Date.now() - startTime;
     ctx.clearRect(0, 0, W, H);
 
+    const globalAlpha = elapsed < DURATION ? 1 : Math.max(0, 1 - (elapsed - DURATION) / FADE_TIME);
+
     let alive = false;
-    for (const p of pieces) {
+    for (const p of particles) {
+      if (elapsed < p.delay) { alive = true; continue; }
+
+      p.vx    *= DRAG;
       p.x     += p.vx;
       p.y     += p.vy;
-      p.vy    += 0.07;          // gravity
+      p.vy    += GRAVITY;
       p.angle += p.spin;
 
-      if (p.y < H + 20) alive = true;
+      if (p.y < H + 50) alive = true;
 
       ctx.save();
+      ctx.globalAlpha = globalAlpha;
       ctx.translate(p.x, p.y);
       ctx.rotate(p.angle);
       ctx.fillStyle = p.color;
-      ctx.globalAlpha = elapsed < DURATION ? 1 : Math.max(0, 1 - (elapsed - DURATION) / 600);
-      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+
+      if (p.glow) { ctx.shadowColor = p.color; ctx.shadowBlur = 12; }
+
+      if (p.shape === 'rect') {
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      } else if (p.shape === 'circle') {
+        ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI * 2); ctx.fill();
+      } else {
+        star4(p.r * 1.1);
+      }
+
       ctx.restore();
     }
 
-    if (alive && elapsed < DURATION + 600) {
-      frame = requestAnimationFrame(draw);
+    if (alive && elapsed < DURATION + FADE_TIME) {
+      requestAnimationFrame(draw);
     } else {
       canvas.remove();
     }
   }
 
-  frame = requestAnimationFrame(draw);
+  requestAnimationFrame(draw);
 }
 
 // ══════════════════════════════════════════
