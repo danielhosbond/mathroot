@@ -325,10 +325,11 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .hist-info      { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .hist-op-name   { font-size: .9rem; font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .hist-meta      { font-family: 'Space Mono', monospace; font-size: .65rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hist-score     { font-family: 'Space Mono', monospace; font-size: 1.2rem; font-weight: 700; white-space: nowrap; }
+.hist-score      { font-family: 'Space Mono', monospace; font-size: 1.2rem; font-weight: 700; white-space: nowrap; }
 .hist-score.green { color: var(--green); }
 .hist-score.grape { color: var(--orange-light); }
 .hist-score.red   { color: var(--red); }
+.hist-score-max  { font-size: .7rem; font-weight: 400; color: var(--muted); }
 .hist-chevron   { font-size: 1.2rem; color: var(--muted); transition: color .2s; }
 .hist-row:hover .hist-chevron { color: var(--orange-light); }
 
@@ -635,6 +636,23 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   color: var(--muted); letter-spacing: .8px; text-transform: uppercase; margin-top: 4px; white-space: nowrap;
 }
 
+/* score row */
+.res-score-row {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; margin-bottom: 16px;
+}
+.res-score-pts {
+  font-family: 'Space Mono', monospace; font-weight: 700; line-height: 1;
+  font-size: clamp(1.8rem, 6vw, 2.4rem); color: var(--orange-light);
+}
+.res-score-max {
+  font-family: 'Space Mono', monospace; font-size: .72rem; color: var(--muted); letter-spacing: .5px;
+}
+.res-pb-label {
+  font-family: 'Space Mono', monospace; font-size: .68rem; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--green); min-height: 1em;
+}
+
 /* badge row */
 .res-badge-row { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
 .badge-grade {
@@ -662,7 +680,7 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .summary-list   { display: flex; flex-direction: column; gap: 8px; margin-bottom: 32px; }
 
 .summary-row {
-  display: grid; grid-template-columns: 28px 1fr auto auto;
+  display: grid; grid-template-columns: 28px 1fr auto auto auto;
   align-items: center; gap: 14px;
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px;
 }
@@ -677,6 +695,9 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .summary-icon   { font-size: .85rem; font-weight: 700; }
 .summary-row.summary-wrong s { opacity: .6; text-decoration-color: var(--red); }
 .summary-time   { font-family: 'Space Mono', monospace; font-size: .72rem; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; white-space: nowrap; flex-shrink: 0; }
+.summary-score  { font-family: 'Space Mono', monospace; font-size: .72rem; font-weight: 700; color: var(--orange-light); white-space: nowrap; text-align: right; }
+.summary-score-max { font-size: .65rem; color: var(--muted); font-weight: 400; }
+.summary-row.summary-wrong .summary-score { color: var(--muted); }
 .summary-empty  { font-family: 'Space Mono', monospace; font-size: .8rem; color: var(--muted); text-align: center; padding: 24px 0; }
 
 

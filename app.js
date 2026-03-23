@@ -113,6 +113,10 @@ const TRANSLATIONS = {
     detailFlawless: 'Flawless — every question correct!',
     detailAnswered: (a, t, c) => `Answered ${a} of ${t} — ${c} correct.`,
     detailCorrectOf: (c, t) => `${c} of ${t} correct`,
+    // Scoring
+    points: 'pts',
+    personalBest: 'Personal best',
+    newPersonalBest: 'New personal best!',
   },
 
   da: {
@@ -186,6 +190,10 @@ const TRANSLATIONS = {
     detailFlawless: 'Fejlfrit — alle svar korrekte!',
     detailAnswered: (a, t, c) => `Besvarede ${a} af ${t} — ${c} korrekte.`,
     detailCorrectOf: (c, t) => `${c} af ${t} korrekte`,
+    // Scoring
+    points: 'point',
+    personalBest: 'Personlig rekord',
+    newPersonalBest: 'Ny personlig rekord!',
   },
 };
 
@@ -223,6 +231,7 @@ let totalQ        = 10;
 let currentQ      = 0;
 let correct       = 0;
 let wrong         = 0;
+let sessionScore  = 0;
 let currentAnswer = null;
 let answered      = false;
 let sessionLog    = [];
@@ -234,6 +243,23 @@ let sessionTimerID    = null;
 
 let allSessions = [];
 let detailIndex = null;
+
+// ══════════════════════════════════════════
+// SCORING
+// ══════════════════════════════════════════
+function calcQuestionScore(mode, grade, elapsedMs, wasCorrect) {
+  if (!wasCorrect) return 0;
+  const base      = grade * 10;
+  const budgetMs  = mode === 'quiz'
+    ? (3 + grade * 0.5) * 1000
+    : (6 + grade * 1.5) * 1000;
+  const multiplier = Math.min(2, Math.max(0.5, budgetMs / Math.max(elapsedMs, 1)));
+  return Math.round(base * multiplier);
+}
+function calcMaxScore(mode, grade, totalQ) { return totalQ * grade * 10 * 2; }
+function pbKey(op, grade, mode) { return `mathroot-pb-${op}-${grade}-${mode}`; }
+function getPersonalBest(op, grade, mode) { return parseInt(localStorage.getItem(pbKey(op, grade, mode)) || '0', 10); }
+function setPersonalBest(op, grade, mode, score) { localStorage.setItem(pbKey(op, grade, mode), String(score)); }
 
 // ══════════════════════════════════════════
 // TRANSLATION HELPERS
@@ -487,7 +513,7 @@ function generateChoices(answer, op) {
 // QUIZ FLOW
 // ══════════════════════════════════════════
 function startQuiz() {
-  currentQ=0; correct=0; wrong=0; sessionLog=[];
+  currentQ=0; correct=0; wrong=0; sessionScore=0; sessionLog=[];
   $('home-section').style.display='none';
   hide('detail-section'); show('quiz-section'); hide('result-section');
   $('session-timer').textContent='0:00';
@@ -629,7 +655,10 @@ function handleAnswer(chosen, btnEl) {
   answered=true;
   const elapsedMs=Date.now()-questionStartTime;
   const wasCorrect=(chosen===currentAnswer);
-  sessionLog.push({equation:renderQuestion._currentEquation,correctAnswer:currentAnswer,chosen,wasCorrect,elapsedMs});
+  const qScore=calcQuestionScore(selectedMode,selectedGrade,elapsedMs,wasCorrect);
+  const maxQScore=selectedGrade*10*2;
+  sessionScore+=qScore;
+  sessionLog.push({equation:renderQuestion._currentEquation,correctAnswer:currentAnswer,chosen,wasCorrect,elapsedMs,score:qScore,maxQScore});
 
   const card=$('question-card'), fb=$('feedback-msg');
   if(selectedMode==='quiz') {
@@ -772,8 +801,12 @@ function showResults(cancelled) {
   const answeredCount=sessionLog.length;
   const pct=answeredCount>0?Math.round((correct/answeredCount)*100):0;
   const avgMs=answeredCount>0?sessionLog.reduce((s,e)=>s+e.elapsedMs,0)/answeredCount:0;
+  const maxScore=calcMaxScore(selectedMode,selectedGrade,totalQ);
+  const pb=getPersonalBest(selectedOp,selectedGrade,selectedMode);
+  const isNewPb=!cancelled&&sessionScore>pb;
+  if(isNewPb) setPersonalBest(selectedOp,selectedGrade,selectedMode,sessionScore);
 
-  const session={id:Date.now(),op:selectedOp,grade:selectedGrade,mode:selectedMode,totalQ,correct,wrong:answeredCount-correct,pct,totalSessionMs,avgMs,answeredCount,cancelled,timestamp:Date.now(),log:[...sessionLog]};
+  const session={id:Date.now(),op:selectedOp,grade:selectedGrade,mode:selectedMode,totalQ,correct,wrong:answeredCount-correct,pct,totalSessionMs,avgMs,answeredCount,cancelled,timestamp:Date.now(),log:[...sessionLog],score:sessionScore,maxScore,isNewPb};
   allSessions.unshift(session);
 
   if (!cancelled && pct === 100) launchConfetti();
@@ -788,6 +821,13 @@ function refreshResultSection(session) {
   $('res-avg').textContent=s.answeredCount>0?fmtMsShort(s.avgMs):'—';
   $('res-grade-badge').textContent=TRANSLATIONS[currentLang].gradeLabel(s.grade);
   $('res-mode-badge').textContent=t(MODE_KEYS[s.mode]);
+
+  if(s.score!=null){
+    $('res-score-pts').textContent=s.score.toLocaleString();
+    $('res-score-max').textContent=`/ ${s.maxScore.toLocaleString()} ${t('points')}`;
+    const pb=getPersonalBest(s.op,s.grade,s.mode);
+    $('res-pb-label').textContent=s.isNewPb?t('newPersonalBest'):pb>0?`${t('personalBest')}: ${pb.toLocaleString()}`:'';
+  }
 
   if(s.cancelled) {
     $('result-emoji').textContent='🛑';
@@ -816,6 +856,7 @@ function renderSummaryList(listEl,countEl,log) {
       <span class="summary-eq">${e.equation} = ${e.correctAnswer}</span>
       <span class="summary-chosen">${e.wasCorrect?`<span class="summary-icon">✓</span> ${e.chosen}`:`<span class="summary-icon">✗</span> <s>${e.chosen}</s>`}</span>
       <span class="summary-time">${fmtMsShort(e.elapsedMs)}</span>
+      ${e.maxQScore!=null?`<span class="summary-score">${e.score}<span class="summary-score-max">/${e.maxQScore}</span></span>`:''}
     </div>`).join('');
 }
 
@@ -832,6 +873,9 @@ function renderHistory() {
     const gradeLabel=TRANSLATIONS[currentLang].gradeLabel(s.grade);
     const pctCls=s.pct===100?'green':s.pct>=60?'grape':'red';
     const stopped=s.cancelled?`<span class="hist-badge cancelled">${t('stopped')}</span>`:'';
+    const scoreDisplay=s.score!=null
+      ?`<div class="hist-score ${pctCls}">${s.score.toLocaleString()}<span class="hist-score-max">/${s.maxScore.toLocaleString()}</span></div>`
+      :`<div class="hist-score ${pctCls}">${s.pct}%</div>`;
     return `
       <div class="hist-row" onclick="openDetail(${i})" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openDetail(${i})">
         <div class="hist-op-badge">${sym}</div>
@@ -839,7 +883,7 @@ function renderHistory() {
           <span class="hist-op-name">${opLabel}${stopped}<span class="hist-chip hist-chip-grade">${gradeLabel}</span><span class="hist-chip hist-chip-mode">${modeLabel}</span></span>
           <span class="hist-meta">${fmtDate(s.timestamp)} · ${t('questionsShort')(s.answeredCount,s.totalQ)} · ${fmtMs(s.totalSessionMs)}</span>
         </div>
-        <div class="hist-score ${pctCls}">${s.pct}%</div>
+        ${scoreDisplay}
         <div class="hist-chevron">›</div>
       </div>`;
   }).join('');
@@ -872,6 +916,13 @@ function openDetail(index) {
   $('detail-grade-badge').textContent=gradeLabel;
   $('detail-mode-badge').textContent=modeLabel;
 
+  if(s.score!=null){
+    $('detail-score-pts').textContent=s.score.toLocaleString();
+    $('detail-score-max').textContent=`/ ${s.maxScore.toLocaleString()} ${t('points')}`;
+    const pb=getPersonalBest(s.op,s.grade,s.mode);
+    $('detail-pb-label').textContent=s.isNewPb?t('newPersonalBest'):pb>0?`${t('personalBest')}: ${pb.toLocaleString()}`:'';
+  }
+
   renderSummaryList($('detail-list'),$('detail-count'),s.log);
   $('home-section').style.display='none';
   show('detail-section');
@@ -891,7 +942,7 @@ function goHome() {
     const answeredCount = sessionLog.length;
     const pct = answeredCount > 0 ? Math.round((correct / answeredCount) * 100) : 0;
     const avgMs = answeredCount > 0 ? sessionLog.reduce((s, e) => s + e.elapsedMs, 0) / answeredCount : 0;
-    const session = { id: Date.now(), op: selectedOp, grade: selectedGrade, mode: selectedMode, totalQ, correct, wrong: answeredCount - correct, pct, totalSessionMs, avgMs, answeredCount, cancelled: true, timestamp: Date.now(), log: [...sessionLog] };
+    const session = { id: Date.now(), op: selectedOp, grade: selectedGrade, mode: selectedMode, totalQ, correct, wrong: answeredCount - correct, pct, totalSessionMs, avgMs, answeredCount, cancelled: true, timestamp: Date.now(), log: [...sessionLog], score: sessionScore, maxScore: calcMaxScore(selectedMode, selectedGrade, totalQ), isNewPb: false };
     allSessions.unshift(session);
     sessionLog = [];
   }
