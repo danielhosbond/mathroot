@@ -701,6 +701,69 @@ function updateScorebar() {
 function cancelQuiz() { if(sessionLog.length===0){stopSessionClock();goHome();return;} showResults(true); }
 
 // ══════════════════════════════════════════
+// CONFETTI
+// ══════════════════════════════════════════
+function launchConfetti() {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width  = window.innerWidth;
+  const H = canvas.height = window.innerHeight;
+
+  const COLORS = ['#ff595e','#ffca3a','#6a4c93','#1982c4','#8ac926','#ff924c','#c77dff'];
+  const COUNT  = 120;
+
+  const pieces = Array.from({ length: COUNT }, () => ({
+    x:     Math.random() * W,
+    y:     Math.random() * -H * 0.5,          // start above viewport
+    w:     6 + Math.random() * 8,
+    h:     10 + Math.random() * 6,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    angle: Math.random() * Math.PI * 2,
+    spin:  (Math.random() - 0.5) * 0.2,
+    vx:    (Math.random() - 0.5) * 3,
+    vy:    2 + Math.random() * 4,
+  }));
+
+  let frame;
+  const startTime = Date.now();
+  const DURATION  = 3500; // ms
+
+  function draw() {
+    const elapsed = Date.now() - startTime;
+    ctx.clearRect(0, 0, W, H);
+
+    let alive = false;
+    for (const p of pieces) {
+      p.x     += p.vx;
+      p.y     += p.vy;
+      p.vy    += 0.07;          // gravity
+      p.angle += p.spin;
+
+      if (p.y < H + 20) alive = true;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = elapsed < DURATION ? 1 : Math.max(0, 1 - (elapsed - DURATION) / 600);
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+
+    if (alive && elapsed < DURATION + 600) {
+      frame = requestAnimationFrame(draw);
+    } else {
+      canvas.remove();
+    }
+  }
+
+  frame = requestAnimationFrame(draw);
+}
+
+// ══════════════════════════════════════════
 // RESULTS
 // ══════════════════════════════════════════
 function showResults(cancelled) {
@@ -712,6 +775,8 @@ function showResults(cancelled) {
 
   const session={id:Date.now(),op:selectedOp,grade:selectedGrade,mode:selectedMode,totalQ,correct,wrong:answeredCount-correct,pct,totalSessionMs,avgMs,answeredCount,cancelled,timestamp:Date.now(),log:[...sessionLog]};
   allSessions.unshift(session);
+
+  if (!cancelled && pct === 100) launchConfetti();
 
   refreshResultSection(session);
 }
