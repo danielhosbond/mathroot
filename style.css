@@ -941,16 +941,22 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 /* ══════════════════════════════════════════
    @MEDIA PRINT
 ══════════════════════════════════════════ */
+@page {
+  size: letter portrait;
+  margin: 0.5in 0.6in;
+}
+
 @media print {
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
-  body { margin: 0; padding: 0; background: #fff; color: #000; }
+  html, body { margin: 0; padding: 0; background: #fff; color: #000; width: 100%; }
   .wrap { display: none !important; }
 
   #print-section {
     display: block !important;
     font-family: 'Space Mono', monospace;
-    padding: 20px 28px;
+    padding: 0;
     color: #000; background: #fff;
+    width: 100%;
   }
 
   /* ── Header ── */
