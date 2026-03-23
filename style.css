@@ -239,10 +239,42 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 /* ══════════════════════════════════════════
    OPERATION GRID
 ══════════════════════════════════════════ */
+.picker-zone { min-height: 175px; }
 .op-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 48px; }
 .op-card { padding: 22px 18px; }
 .op-symbol { font-size: 2rem; font-weight: 800; color: var(--orange-light); margin-bottom: 8px; display: block; font-family: 'Space Mono', monospace; }
 .op-name   { font-size: .85rem; font-weight: 600; color: var(--muted); letter-spacing: .5px; }
+
+/* ══════════════════════════════════════════
+   PRACTICE TYPE TOGGLE
+══════════════════════════════════════════ */
+.practice-toggle {
+  display: flex; gap: 0; margin-bottom: 48px;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 4px;
+}
+.practice-btn {
+  flex: 1; height: 38px; border: none; border-radius: 7px;
+  font-family: 'Space Mono', monospace; font-size: .75rem; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  cursor: pointer; color: var(--muted); background: transparent;
+  transition: background .2s, color .2s, box-shadow .2s;
+}
+.practice-btn.active {
+  background: linear-gradient(135deg, var(--orange), var(--orange-end));
+  color: #fff; box-shadow: 0 2px 8px var(--orange-glow);
+}
+
+/* ══════════════════════════════════════════
+   CONVERSION CATEGORY GRID
+══════════════════════════════════════════ */
+.conv-grid { grid-template-columns: repeat(5, 1fr); margin-bottom: 48px; }
+.conv-cat-card { padding: 18px 10px; }
+.conv-cat-icon { font-size: 1.3rem; }
+.conv-cat-disabled { opacity: .3; cursor: not-allowed; pointer-events: none; }
+
+@media (max-width: 480px) {
+  .conv-grid { grid-template-columns: repeat(3, 1fr); }
+}
 
 /* ══════════════════════════════════════════
    COUNT GRID
@@ -385,6 +417,28 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .progress-bar-inner { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange-light)); border-radius: 99px; transition: width .4s ease; width: 0%; }
 
 /* ══════════════════════════════════════════
+   CONVERSION REFERENCE BOX
+══════════════════════════════════════════ */
+.conv-ref-box {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 16px; margin-bottom: 16px;
+}
+.conv-ref-title {
+  font-family: 'Space Mono', monospace; font-size: .58rem; color: var(--orange-light);
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; text-align: center;
+}
+.conv-ref-list {
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+}
+.conv-ref-item {
+  font-family: 'Space Mono', monospace; font-size: .88rem; color: var(--orange-light);
+  white-space: nowrap; width: 100%; text-align: center;
+  padding: 5px 0; border-bottom: 1px solid var(--border);
+}
+.conv-ref-item:last-child { border-bottom: none; padding-bottom: 0; }
+.conv-ref-item:first-child { padding-top: 0; }
+
+/* ══════════════════════════════════════════
    QUESTION CARD
 ══════════════════════════════════════════ */
 .question-card {
@@ -420,6 +474,14 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 }
 .q-eq-op  { color: var(--orange-light); }
 .q-eq-box { width: 80px; height: 64px; border-bottom: 3px solid var(--orange); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--orange-light); }
+
+/* ── Conversion equation ── */
+.q-equation-conversion { font-size: clamp(1.8rem, 6vw, 3rem); gap: 8px; flex-wrap: wrap; }
+.q-conv-val  { color: var(--text); }
+.q-conv-unit {
+  font-size: 0.52em; color: var(--muted); font-weight: 400;
+  align-self: flex-end; padding-bottom: 0.18em; letter-spacing: .5px;
+}
 
 /* ── Stacked equation (addition / subtraction) ── */
 .q-equation-stacked {
@@ -526,13 +588,18 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .numpad-btn:hover:not(:disabled)   { border-color: var(--orange); background: var(--surface); transform: translateY(-1px); }
 .numpad-btn:active:not(:disabled)  { transform: translateY(0); }
 .numpad-btn:disabled               { opacity: .4; cursor: not-allowed; }
-.numpad-back   { color: var(--muted); font-size: 1rem; }
-.numpad-submit {
+.numpad-back { color: var(--muted); font-size: 1rem; }
+.numpad-dot  { color: var(--text); font-size: 1.4rem; }
+.numpad-confirm {
+  width: 100%; max-width: 320px; height: 54px;
   background: linear-gradient(135deg, var(--orange), var(--orange-end));
-  border-color: transparent; color: #fff; font-size: 1.1rem;
-  box-shadow: 0 4px 16px var(--orange-glow);
+  border: none; border-radius: 10px; color: #fff;
+  font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700;
+  cursor: pointer; box-shadow: 0 4px 16px var(--orange-glow);
+  transition: opacity .2s;
 }
-.numpad-submit:hover:not(:disabled) { opacity: .9; border-color: transparent; background: linear-gradient(135deg, var(--orange), var(--orange-end)); }
+.numpad-confirm:hover:not(:disabled) { opacity: .9; }
+.numpad-confirm:disabled { opacity: .4; cursor: not-allowed; }
 
 /* ══════════════════════════════════════════
    FEEDBACK
@@ -735,6 +802,7 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   .hero h1 { font-size: clamp(1.3rem,4.8vw,3.4rem); }
   .hero-tagline { font-size: clamp(.6rem,2.4vw,1.05rem); }
 
+  .picker-zone { min-height: 135px; }
   .op-grid    { grid-template-columns: repeat(4,1fr); gap: 8px; }
   .op-card    { padding: 14px 6px; }
   .op-symbol  { font-size: 1.3rem; margin-bottom: 4px; }

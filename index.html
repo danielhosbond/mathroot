@@ -62,7 +62,24 @@
       <div class="grade-info" id="grade-info"></div>
     </div>
 
+    <!-- Practice type picker -->
+    <div class="section-label" data-i18n="practiceType"></div>
+    <div class="practice-toggle" id="practice-toggle">
+      <button class="practice-btn active" data-type="math" onclick="selectPracticeType(this)" data-i18n="math"></button>
+      <button class="practice-btn" data-type="conversions" onclick="selectPracticeType(this)" data-i18n="conversions"></button>
+    </div>
+
+    <!-- Picker zone: conversion category ↔ operation (fixed height to prevent layout shift) -->
+    <div class="picker-zone">
+
+    <!-- Conversion category picker -->
+    <div id="conv-grid-wrap" style="display:none;">
+      <div class="section-label" data-i18n="chooseCategory"></div>
+      <div class="op-grid conv-grid" id="conv-grid"></div>
+    </div>
+
     <!-- Operation picker -->
+    <div id="op-grid-wrap">
     <div class="section-label" data-i18n="chooseOperation"></div>
     <div class="op-grid">
       <div class="op-card" data-op="addition" onclick="selectOp(this)">
@@ -82,6 +99,9 @@
         <div class="op-name" data-i18n="division"></div>
       </div>
     </div>
+    </div><!-- /#op-grid-wrap -->
+
+    </div><!-- /.picker-zone -->
 
     <!-- Question count picker -->
     <div class="section-label" data-i18n="numberOfQuestions"></div>
@@ -185,6 +205,11 @@
       </div>
     </div>
 
+    <div class="conv-ref-box" id="conv-ref-box" style="display:none;">
+      <div class="conv-ref-title" id="conv-ref-title"></div>
+      <div class="conv-ref-list" id="conv-ref-list"></div>
+    </div>
+
     <div class="question-card" id="question-card">
       <div class="q-number" id="q-label"></div>
       <div class="q-equation" id="q-equation"></div>
@@ -192,6 +217,7 @@
       <div class="numpad-wrap" id="numpad-wrap" style="display:none;">
         <div class="numpad-display" id="numpad-display">_</div>
         <div class="numpad-grid" id="numpad-grid"></div>
+        <button class="numpad-confirm" id="numpad-confirm" onclick="handleNumpadKey('✓')">✓</button>
       </div>
       <div class="feedback" id="feedback-msg"></div>
     </div>

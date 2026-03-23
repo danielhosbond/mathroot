@@ -117,6 +117,30 @@ const TRANSLATIONS = {
     points: 'pts',
     personalBest: 'Personal best',
     newPersonalBest: 'New personal best!',
+    // Conversions
+    practiceType: 'Practice type',
+    math: 'Math',
+    conversions: 'Conversions',
+    chooseCategory: 'Choose category',
+    catLength: 'Length',
+    catWeight: 'Weight',
+    catVolume: 'Volume',
+    catTime: 'Time',
+    catArea: 'Area',
+    convReference: 'Reference',
+    unitLabels: {
+      km:'km', m:'m', cm:'cm', mm:'mm',
+      kg:'kg', g:'g', mg:'mg',
+      l:'l', dl:'dl', cl:'cl', ml:'ml',
+      'm²':'m²', 'cm²':'cm²', 'km²':'km²', hectare:'hectare',
+      sec:   { s:'second',  p:'seconds'  },
+      min:   { s:'minute',  p:'minutes'  },
+      hour:  { s:'hour',    p:'hours'    },
+      day:   { s:'day',     p:'days'     },
+      week:  { s:'week',    p:'weeks'    },
+      month: { s:'month',   p:'months'   },
+      year:  { s:'year',    p:'years'    },
+    },
   },
 
   da: {
@@ -194,6 +218,30 @@ const TRANSLATIONS = {
     points: 'point',
     personalBest: 'Personlig rekord',
     newPersonalBest: 'Ny personlig rekord!',
+    // Conversions
+    practiceType: 'Øvelsestype',
+    math: 'Matematik',
+    conversions: 'Enheder',
+    chooseCategory: 'Vælg kategori',
+    catLength: 'Længde',
+    catWeight: 'Vægt',
+    catVolume: 'Rumfang',
+    catTime: 'Tid',
+    catArea: 'Areal',
+    convReference: 'Reference',
+    unitLabels: {
+      km:'km', m:'m', cm:'cm', mm:'mm',
+      kg:'kg', g:'g', mg:'mg',
+      l:'l', dl:'dl', cl:'cl', ml:'ml',
+      'm²':'m²', 'cm²':'cm²', 'km²':'km²', hectare:'hektar',
+      sec:   { s:'sekund',  p:'sekunder'  },
+      min:   { s:'minut',   p:'minutter'  },
+      hour:  { s:'time',    p:'timer'     },
+      day:   { s:'dag',     p:'dage'      },
+      week:  { s:'uge',     p:'uger'      },
+      month: { s:'måned',   p:'måneder'   },
+      year:  { s:'år',      p:'år'        },
+    },
   },
 };
 
@@ -212,6 +260,94 @@ const GRADE_CONFIG = {
   9:  { add: { aMin:50000, aMax:499999,bMin:50000, bMax:499999}, sub: { aMin:50000, aMax:499999,bMin:10000,bMax:249999}, mul: { aMin:100, aMax:999, bMin:100,bMax:999 }, div: { qMin:100,qMax:999, dMin:10, dMax:99  } },
   10: { add: { aMin:100000,aMax:999999,bMin:100000,bMax:999999}, sub: { aMin:100000,aMax:999999,bMin:50000,bMax:499999}, mul: { aMin:100, aMax:9999,bMin:100,bMax:9999}, div: { qMin:100,qMax:9999,dMin:100,dMax:999 } },
 };
+
+// ══════════════════════════════════════════
+// CONVERSION CONFIG
+// ══════════════════════════════════════════
+const CONVERSION_PAIRS = {
+  length: [
+    { from:'km',  to:'m',   factor:1000,  minGrade:1, valueMin:1,    valueMax:5,    valueStep:1   }, // 1–5 km → 1000–5000 m
+    { from:'m',   to:'cm',  factor:100,   minGrade:1, valueMin:1,    valueMax:10,   valueStep:1   }, // 1–10 m → 100–1000 cm
+    { from:'cm',  to:'mm',  factor:10,    minGrade:2, valueMin:1,    valueMax:30,   valueStep:1   }, // 1–30 cm → 10–300 mm
+    { from:'cm',  to:'m',   factor:0.01,  minGrade:4, valueMin:100,  valueMax:1000, valueStep:100 }, // 100–1000 cm → 1–10 m
+    { from:'mm',  to:'cm',  factor:0.1,   minGrade:4, valueMin:10,   valueMax:100,  valueStep:10  }, // 10–100 mm → 1–10 cm
+    { from:'m',   to:'km',  factor:0.001, minGrade:5, valueMin:1000, valueMax:9000, valueStep:500 }, // 1000–9000 m → 1–9 km
+  ],
+  weight: [
+    { from:'kg',  to:'g',   factor:1000,  minGrade:1, valueMin:1,    valueMax:5,    valueStep:1   }, // 1–5 kg → 1000–5000 g
+    { from:'g',   to:'kg',  factor:0.001, minGrade:4, valueMin:1000, valueMax:9000, valueStep:500 }, // 1000–9000 g → 1–9 kg
+    { from:'g',   to:'mg',  factor:1000,  minGrade:6, valueMin:1,    valueMax:5,    valueStep:1   }, // 1–5 g → 1000–5000 mg
+    { from:'mg',  to:'g',   factor:0.001, minGrade:7, valueMin:1000, valueMax:5000, valueStep:500 }, // 1000–5000 mg → 1–5 g
+  ],
+  volume: [
+    { from:'l',   to:'ml',  factor:1000,  minGrade:1, valueMin:1,    valueMax:5,    valueStep:1   }, // 1–5 l → 1000–5000 ml
+    { from:'l',   to:'dl',  factor:10,    minGrade:2, valueMin:1,    valueMax:10,   valueStep:1   }, // 1–10 l → 10–100 dl
+    { from:'dl',  to:'cl',  factor:10,    minGrade:3, valueMin:1,    valueMax:20,   valueStep:1   }, // 1–20 dl → 10–200 cl
+    { from:'cl',  to:'ml',  factor:10,    minGrade:3, valueMin:1,    valueMax:30,   valueStep:1   }, // 1–30 cl → 10–300 ml
+    { from:'dl',  to:'l',   factor:0.1,   minGrade:4, valueMin:10,   valueMax:100,  valueStep:10  }, // 10–100 dl → 1–10 l
+    { from:'cl',  to:'dl',  factor:0.1,   minGrade:4, valueMin:10,   valueMax:100,  valueStep:10  }, // 10–100 cl → 1–10 dl
+    { from:'ml',  to:'cl',  factor:0.1,   minGrade:5, valueMin:10,   valueMax:200,  valueStep:10  }, // 10–200 ml → 1–20 cl
+    { from:'ml',  to:'l',   factor:0.001, minGrade:5, valueMin:1000, valueMax:5000, valueStep:500 }, // 1000–5000 ml → 1–5 l
+  ],
+  time: [
+    { from:'min',   to:'sec',   factor:60,    minGrade:1, valueMin:1,  valueMax:5,   valueStep:1  }, // 1–5 min → 60–300 sec
+    { from:'week',  to:'day',   factor:7,     minGrade:1, valueMin:1,  valueMax:4,   valueStep:1  }, // 1–4 weeks → 7–28 days
+    { from:'hour',  to:'min',   factor:60,    minGrade:2, valueMin:1,  valueMax:6,   valueStep:1  }, // 1–6 hours → 60–360 min
+    { from:'day',   to:'hour',  factor:24,    minGrade:2, valueMin:1,  valueMax:7,   valueStep:1  }, // 1–7 days → 24–168 hours
+    { from:'year',  to:'month', factor:12,    minGrade:2, valueMin:1,  valueMax:5,   valueStep:1  }, // 1–5 years → 12–60 months
+    { from:'day',   to:'week',  factor:1/7,   minGrade:4, valueMin:7,  valueMax:42,  valueStep:7  }, // 7–42 days → 1–6 weeks
+    { from:'month', to:'year',  factor:1/12,  minGrade:4, valueMin:12, valueMax:60,  valueStep:12 }, // 12–60 months → 1–5 years
+    { from:'sec',   to:'min',   factor:1/60,  minGrade:5, valueMin:60, valueMax:600, valueStep:60 }, // 60–600 sec → 1–10 min
+    { from:'min',   to:'hour',  factor:1/60,  minGrade:5, valueMin:60, valueMax:360, valueStep:30 }, // 60–360 min → 1–6 hours
+    { from:'hour',  to:'day',   factor:1/24,  minGrade:6, valueMin:24, valueMax:168, valueStep:12 }, // 24–168 hours → 1–7 days
+  ],
+  area: [
+    { from:'m²',      to:'cm²',     factor:10000,  minGrade:7, valueMin:1,     valueMax:10,     valueStep:1     }, // 1–10 m² → 10 000–100 000 cm²
+    { from:'cm²',     to:'m²',      factor:0.0001, minGrade:7, valueMin:10000, valueMax:100000, valueStep:10000 }, // 10 000–100 000 cm² → 1–10 m²
+    { from:'hectare', to:'m²',      factor:10000,  minGrade:7, valueMin:1,     valueMax:10,     valueStep:1     }, // 1–10 ha → 10 000–100 000 m²
+    { from:'m²',      to:'hectare', factor:0.0001, minGrade:8, valueMin:10000, valueMax:100000, valueStep:10000 }, // 10 000–100 000 m² → 1–10 ha
+    { from:'km²',     to:'hectare', factor:100,    minGrade:9, valueMin:1,     valueMax:10,     valueStep:1     }, // 1–10 km² → 100–1000 ha
+    { from:'hectare', to:'km²',     factor:0.01,   minGrade:9, valueMin:100,   valueMax:1000,   valueStep:100   }, // 100–1000 ha → 1–10 km²
+  ],
+};
+
+const CONV_REFS = {
+  length: [
+    { from:1, fromUnit:'km', to:1000, toUnit:'m'  },
+    { from:1, fromUnit:'m',  to:100,  toUnit:'cm' },
+    { from:1, fromUnit:'cm', to:10,   toUnit:'mm' },
+  ],
+  weight: [
+    { from:1, fromUnit:'kg', to:1000, toUnit:'g'  },
+    { from:1, fromUnit:'g',  to:1000, toUnit:'mg' },
+  ],
+  volume: [
+    { from:1, fromUnit:'l',  to:10,   toUnit:'dl' },
+    { from:1, fromUnit:'dl', to:10,   toUnit:'cl' },
+    { from:1, fromUnit:'cl', to:10,   toUnit:'ml' },
+    { from:1, fromUnit:'l',  to:1000, toUnit:'ml' },
+  ],
+  time: [
+    { from:1, fromUnit:'min',   to:60, toUnit:'sec'   },
+    { from:1, fromUnit:'hour',  to:60, toUnit:'min'   },
+    { from:1, fromUnit:'day',   to:24, toUnit:'hour'  },
+    { from:1, fromUnit:'week',  to:7,  toUnit:'day'   },
+    { from:1, fromUnit:'year',  to:12, toUnit:'month' },
+  ],
+  area: [
+    { from:1, fromUnit:'m²',      to:10000, toUnit:'cm²'     },
+    { from:1, fromUnit:'hectare', to:10000, toUnit:'m²'      },
+    { from:1, fromUnit:'km²',     to:100,   toUnit:'hectare' },
+  ],
+};
+
+const CONV_CATEGORIES = [
+  { key:'length', icon:'m',   labelKey:'catLength', minGrade:1 },
+  { key:'weight', icon:'kg',  labelKey:'catWeight', minGrade:1 },
+  { key:'volume', icon:'l',   labelKey:'catVolume', minGrade:1 },
+  { key:'time',   icon:'t',   labelKey:'catTime',   minGrade:1 },
+  { key:'area',   icon:'m²',  labelKey:'catArea',   minGrade:7 },
+];
 
 const OP_META_KEYS = {
   addition: 'addition', subtraction: 'subtraction',
@@ -243,16 +379,18 @@ let sessionTimerID    = null;
 
 let allSessions = [];
 let detailIndex = null;
+let practiceType     = 'math';
+let selectedCategory = null;
 
 // ══════════════════════════════════════════
 // SCORING
 // ══════════════════════════════════════════
-function calcQuestionScore(mode, grade, elapsedMs, wasCorrect) {
+function calcQuestionScore(mode, grade, elapsedMs, wasCorrect, type='math') {
   if (!wasCorrect) return 0;
   const base      = grade * 10;
-  const budgetMs  = mode === 'quiz'
-    ? (3 + grade * 0.5) * 1000
-    : (6 + grade * 1.5) * 1000;
+  const budgetMs  = (type === 'conversions' || mode === 'input')
+    ? (6 + grade * 1.5) * 1000
+    : (3 + grade * 0.5) * 1000;
   const multiplier = Math.min(2, Math.max(0.5, budgetMs / Math.max(elapsedMs, 1)));
   return Math.round(base * multiplier);
 }
@@ -260,6 +398,96 @@ function calcMaxScore(mode, grade, totalQ) { return totalQ * grade * 10 * 2; }
 function pbKey(op, grade, mode) { return `mathroot-pb-${op}-${grade}-${mode}`; }
 function getPersonalBest(op, grade, mode) { return parseInt(localStorage.getItem(pbKey(op, grade, mode)) || '0', 10); }
 function setPersonalBest(op, grade, mode, score) { localStorage.setItem(pbKey(op, grade, mode), String(score)); }
+
+// ══════════════════════════════════════════
+// CONVERSION HELPERS
+// ══════════════════════════════════════════
+function cvtFmt(v) { return v % 1 === 0 ? String(v) : v.toFixed(1); }
+function unitLabel(unit, value) {
+  const map = TRANSLATIONS[currentLang].unitLabels ?? TRANSLATIONS.en.unitLabels;
+  const lbl = map[unit] ?? unit;
+  if (typeof lbl === 'string') return lbl;
+  return value === 1 ? lbl.s : lbl.p;
+}
+
+function generateConversionQuestion(category) {
+  const pairs = CONVERSION_PAIRS[category].filter(p => p.minGrade <= selectedGrade);
+  const pair  = pairs[Math.floor(Math.random() * pairs.length)];
+  const steps = randInt(Math.round(pair.valueMin / pair.valueStep), Math.round(pair.valueMax / pair.valueStep));
+  const fromValue = Math.round(steps * pair.valueStep * 1000) / 1000;
+  const answer    = Math.round(fromValue * pair.factor * 10) / 10;
+  return { display: { fromValue, fromUnit: pair.from, toUnit: pair.to, factor: pair.factor }, answer };
+}
+
+function generateConversionChoices(answer, display) {
+  const choices = new Set([answer]);
+
+  // One classic order-of-magnitude mistake (÷10 of answer = used wrong power of 10)
+  const r1 = v => Math.round(v * 10) / 10;
+  const magErr = r1(answer / 10);
+  if (magErr > 0 && magErr !== answer) choices.add(magErr);
+
+  // Two numerically-close distractors — same order of magnitude as the answer
+  const step = Math.max(0.1, Math.pow(10, Math.floor(Math.log10(Math.max(answer, 0.1))) - 1));
+  let tries = 0;
+  while (choices.size < 4 && tries < 80) {
+    const pct  = 0.1 + Math.random() * 0.3;           // 10–40 % offset
+    const dir  = Math.random() < 0.5 ? 1 : -1;
+    const raw  = answer * (1 + dir * pct);
+    const c    = r1(Math.round(raw / step) * step);
+    if (c > 0 && c !== answer) choices.add(c);
+    tries++;
+  }
+  return [...choices].slice(0, 4).sort(() => Math.random() - 0.5);
+}
+
+function buildCategoryGrid() {
+  const grid = $('conv-grid');
+  if (!grid) return;
+  grid.innerHTML = CONV_CATEGORIES.map(cat => {
+    const eligible   = CONVERSION_PAIRS[cat.key].some(p => p.minGrade <= selectedGrade);
+    const activeClass = selectedCategory === cat.key ? ' active' : '';
+    const clickAttr   = eligible ? `onclick="selectCategory(this)"` : '';
+    return `<div class="op-card conv-cat-card${activeClass}${eligible ? '' : ' conv-cat-disabled'}" data-cat="${cat.key}" ${clickAttr}>
+      <span class="op-symbol conv-cat-icon">${cat.icon}</span>
+      <div class="op-name">${t(cat.labelKey)}</div>
+    </div>`;
+  }).join('');
+  if (selectedCategory && !CONVERSION_PAIRS[selectedCategory].some(p => p.minGrade <= selectedGrade)) {
+    selectedCategory = null;
+    if (practiceType === 'conversions') $('start-btn').disabled = true;
+  }
+}
+
+function selectPracticeType(el) {
+  document.querySelectorAll('.practice-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  practiceType = el.dataset.type;
+  selectedOp = null; selectedCategory = null;
+  $('start-btn').disabled = true;
+  document.querySelectorAll('.op-card').forEach(c => c.classList.remove('active'));
+  $('op-grid-wrap').style.display    = practiceType === 'math' ? '' : 'none';
+  $('conv-grid-wrap').style.display  = practiceType === 'conversions' ? '' : 'none';
+}
+
+function selectCategory(el) {
+  document.querySelectorAll('.conv-cat-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedCategory = el.dataset.cat;
+  $('start-btn').disabled = false;
+}
+
+function renderConvRefBox() {
+  const box = $('conv-ref-box');
+  if (!box) return;
+  if (practiceType !== 'conversions' || !selectedCategory) { box.style.display = 'none'; return; }
+  $('conv-ref-title').textContent = t('convReference');
+  const refs = CONV_REFS[selectedCategory] || [];
+  $('conv-ref-list').innerHTML = refs.map(r =>
+    `<span class="conv-ref-item">1 ${unitLabel(r.fromUnit, 1)} = ${r.to.toLocaleString()} ${unitLabel(r.toUnit, r.to)}</span>`
+  ).join('');
+  box.style.display = '';
+}
 
 // ══════════════════════════════════════════
 // TRANSLATION HELPERS
@@ -287,11 +515,13 @@ function applyLang() {
 
   // Rebuild dynamic sections that depend on language
   buildGradeMenu();
+  buildCategoryGrid();
   selectGrade(selectedGrade, false); // refresh pills without closing menu
 
   // Re-render quiz section dynamic text if visible
   if ($('quiz-section').classList.contains('visible')) {
     $('q-label').textContent = t('questionOf')(currentQ + 1, totalQ);
+    renderConvRefBox();
   }
 
   // Re-render result section if visible
@@ -388,6 +618,7 @@ function selectGrade(g, closeMenu = true) {
     </div>`;
 
   buildGradeMenu();
+  buildCategoryGrid();
   if (closeMenu) {
     $('grade-menu').classList.remove('open');
     $('grade-btn').setAttribute('aria-expanded', 'false');
@@ -517,7 +748,7 @@ function startQuiz() {
   $('home-section').style.display='none';
   hide('detail-section'); show('quiz-section'); hide('result-section');
   $('session-timer').textContent='0:00';
-  startSessionClock(); updateScorebar(); renderQuestion();
+  startSessionClock(); updateScorebar(); renderConvRefBox(); renderQuestion();
 }
 
 function renderQuestion() {
@@ -545,16 +776,26 @@ function renderQuestion() {
     oldGrid.replaceWith(newGrid);
 
     // ── Generate new question ────────────────────────────────────────────
-    const q = generateQuestion(selectedOp);
+    const q = practiceType === 'conversions'
+      ? generateConversionQuestion(selectedCategory)
+      : generateQuestion(selectedOp);
     currentAnswer = q.answer;
     const { display } = q;
-    renderQuestion._currentEquation = `${display.a} ${display.op} ${display.b}`;
+
+    if (practiceType === 'conversions') {
+      renderQuestion._currentEquation = `${cvtFmt(display.fromValue)} ${unitLabel(display.fromUnit, display.fromValue)} → ${unitLabel(display.toUnit, 2)}`;
+    } else {
+      renderQuestion._currentEquation = `${display.a} ${display.op} ${display.b}`;
+    }
 
     $('q-label').textContent   = t('questionOf')(currentQ + 1, totalQ);
     $('q-counter').textContent = `${currentQ + 1}/${totalQ}`;
 
     const eqEl = $('q-equation');
-    if (display.op === '+' || display.op === '−') {
+    if (practiceType === 'conversions') {
+      eqEl.className = 'q-equation q-equation-conversion';
+      eqEl.innerHTML = `<span class="q-conv-val">${cvtFmt(display.fromValue)}</span><span class="q-conv-unit">${unitLabel(display.fromUnit, display.fromValue)}</span><span class="q-eq-op">=</span><span class="q-eq-box">?</span><span class="q-conv-unit">${unitLabel(display.toUnit, 2)}</span>`;
+    } else if (display.op === '+' || display.op === '−') {
       // ── Vertical (stacked) layout for addition / subtraction ──
       // For addition, put the larger number on top (a+b = b+a).
       // For subtraction, a is already the larger number (minuend).
@@ -583,18 +824,26 @@ function renderQuestion() {
       eqEl.innerHTML = `<span>${display.a}</span><span class="q-eq-op">${display.op}</span><span>${display.b}</span><span class="q-eq-op">=</span><span class="q-eq-box">?</span>`;
     }
 
-    if (selectedMode === 'quiz') {
-      $('numpad-wrap').style.display = 'none';
-      generateChoices(currentAnswer, selectedOp).forEach(c => {
+    const appendChoiceBtns = choices => {
+      choices.forEach(c => {
         const div = document.createElement('div');
         div.className   = 'choice-btn no-touch-feedback';
-        div.textContent = c;
+        div.textContent = cvtFmt(c);
         div.setAttribute('role', 'button');
         div.setAttribute('tabindex', '0');
         div.addEventListener('pointerdown', e => { e.preventDefault(); handleAnswer(c, div); });
         div.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleAnswer(c, div); });
         newGrid.appendChild(div);
       });
+    };
+
+    if (selectedMode === 'quiz') {
+      $('numpad-wrap').style.display = 'none';
+      if (practiceType === 'conversions') {
+        appendChoiceBtns(generateConversionChoices(currentAnswer, display));
+      } else {
+        appendChoiceBtns(generateChoices(currentAnswer, selectedOp));
+      }
       // Remove the guard class after iOS has fully cleared any residual touch state
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -622,19 +871,21 @@ function renderNumpad() {
   numpadValue='';
   const disp=$('numpad-display'); disp.textContent='_'; disp.className='numpad-display';
   const grid=$('numpad-grid'); grid.innerHTML='';
-  ['1','2','3','4','5','6','7','8','9','0','⌫','✓'].forEach(k=>{
+  ['1','2','3','4','5','6','7','8','9','.','0','⌫'].forEach(k=>{
     const btn=document.createElement('button');
     btn.className='numpad-btn'; btn.textContent=k;
     if(k==='⌫') btn.classList.add('numpad-back');
-    if(k==='✓') btn.classList.add('numpad-submit');
+    if(k==='.') btn.classList.add('numpad-dot');
     btn.addEventListener('click',()=>handleNumpadKey(k)); grid.appendChild(btn);
   });
+  const nc=$('numpad-confirm'); if(nc) nc.disabled=false;
 }
 function updateNumpadDisplay() { $('numpad-display').textContent=numpadValue===''?'_':numpadValue; }
 function handleNumpadKey(k) {
   if(answered) return;
   if(k==='⌫') { numpadValue=numpadValue.slice(0,-1); updateNumpadDisplay(); }
-  else if(k==='✓') { if(numpadValue==='') return; handleAnswer(parseInt(numpadValue,10),null); }
+  else if(k==='.') { if(numpadValue.length>0&&!numpadValue.includes('.')) { numpadValue+='.'; updateNumpadDisplay(); } }
+  else if(k==='✓') { if(numpadValue===''||numpadValue==='.') return; handleAnswer(parseFloat(numpadValue),null); }
   else { if(numpadValue.length>=12) return; numpadValue+=k; updateNumpadDisplay(); }
 }
 document.addEventListener('keydown', e => {
@@ -642,6 +893,7 @@ document.addEventListener('keydown', e => {
   const qs=document.getElementById('quiz-section');
   if(!qs||!qs.classList.contains('visible')||answered) return;
   if(e.key>='0'&&e.key<='9') handleNumpadKey(e.key);
+  else if(e.key==='.') handleNumpadKey('.');
   else if(e.key==='Backspace') handleNumpadKey('⌫');
   else if(e.key==='Enter') handleNumpadKey('✓');
 });
@@ -654,8 +906,8 @@ function handleAnswer(chosen, btnEl) {
   if(btnEl && btnEl.getAttribute('data-answered')) return;
   answered=true;
   const elapsedMs=Date.now()-questionStartTime;
-  const wasCorrect=(chosen===currentAnswer);
-  const qScore=calcQuestionScore(selectedMode,selectedGrade,elapsedMs,wasCorrect);
+  const wasCorrect=Math.abs(Number(chosen)-currentAnswer)<0.005;
+  const qScore=calcQuestionScore(selectedMode,selectedGrade,elapsedMs,wasCorrect,practiceType);
   const maxQScore=selectedGrade*10*2;
   sessionScore+=qScore;
   sessionLog.push({equation:renderQuestion._currentEquation,correctAnswer:currentAnswer,chosen,wasCorrect,elapsedMs,score:qScore,maxQScore});
@@ -673,13 +925,14 @@ function handleAnswer(chosen, btnEl) {
       if(btnEl) btnEl.classList.add('wrong-choice');
       // Also highlight the correct answer
       document.querySelectorAll('.choice-btn').forEach(b => {
-        if(parseInt(b.textContent)===currentAnswer) b.classList.add('correct-choice');
+        if(Math.abs(parseFloat(b.textContent)-currentAnswer)<0.005) b.classList.add('correct-choice');
       });
       card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400);
       fb.textContent=t('wrongFeedback')(currentAnswer); fb.className='feedback wrong show';
     }
   } else {
     document.querySelectorAll('.numpad-btn').forEach(b=>(b.disabled=true));
+    const nc=$('numpad-confirm'); if(nc) nc.disabled=true;
     const disp=$('numpad-display');
     if(wasCorrect) {
       correct++; card.classList.add('correct'); disp.classList.add('numpad-correct');
@@ -806,7 +1059,7 @@ function showResults(cancelled) {
   const isNewPb=!cancelled&&sessionScore>pb;
   if(isNewPb) setPersonalBest(selectedOp,selectedGrade,selectedMode,sessionScore);
 
-  const session={id:Date.now(),op:selectedOp,grade:selectedGrade,mode:selectedMode,totalQ,correct,wrong:answeredCount-correct,pct,totalSessionMs,avgMs,answeredCount,cancelled,timestamp:Date.now(),log:[...sessionLog],score:sessionScore,maxScore,isNewPb};
+  const session={id:Date.now(),op:selectedOp,grade:selectedGrade,mode:selectedMode,practiceType,category:selectedCategory,totalQ,correct,wrong:answeredCount-correct,pct,totalSessionMs,avgMs,answeredCount,cancelled,timestamp:Date.now(),log:[...sessionLog],score:sessionScore,maxScore,isNewPb};
   allSessions.unshift(session);
 
   if (!cancelled && pct === 100) launchConfetti();
@@ -867,8 +1120,13 @@ function renderHistory() {
   if(allSessions.length===0){$('history-section').style.display='none';return;}
   $('history-section').style.display='';
   $('history-list').innerHTML=allSessions.map((s,i)=>{
-    const sym=OP_SYMBOLS[s.op]||'?';
-    const opLabel=t(OP_META_KEYS[s.op]||s.op);
+    let sym, opLabel;
+    if (s.practiceType==='conversions') {
+      const cat=CONV_CATEGORIES.find(c=>c.key===s.category);
+      sym=cat?cat.icon:'↔'; opLabel=cat?t(cat.labelKey):s.category||'?';
+    } else {
+      sym=OP_SYMBOLS[s.op]||'?'; opLabel=t(OP_META_KEYS[s.op]||s.op);
+    }
     const modeLabel=t(MODE_KEYS[s.mode]||s.mode);
     const gradeLabel=TRANSLATIONS[currentLang].gradeLabel(s.grade);
     const pctCls=s.pct===100?'green':s.pct>=60?'grape':'red';
@@ -896,7 +1154,9 @@ function clearHistory(){allSessions=[];renderHistory();}
 function openDetail(index) {
   detailIndex=index;
   const s=allSessions[index];
-  const opLabel=t(OP_META_KEYS[s.op]||s.op);
+  const opLabel = s.practiceType==='conversions'
+    ? t((CONV_CATEGORIES.find(c=>c.key===s.category)||{}).labelKey||s.category)
+    : t(OP_META_KEYS[s.op]||s.op);
   const modeLabel=t(MODE_KEYS[s.mode]||s.mode);
   const gradeLabel=TRANSLATIONS[currentLang].gradeLabel(s.grade);
 
@@ -942,15 +1202,17 @@ function goHome() {
     const answeredCount = sessionLog.length;
     const pct = answeredCount > 0 ? Math.round((correct / answeredCount) * 100) : 0;
     const avgMs = answeredCount > 0 ? sessionLog.reduce((s, e) => s + e.elapsedMs, 0) / answeredCount : 0;
-    const session = { id: Date.now(), op: selectedOp, grade: selectedGrade, mode: selectedMode, totalQ, correct, wrong: answeredCount - correct, pct, totalSessionMs, avgMs, answeredCount, cancelled: true, timestamp: Date.now(), log: [...sessionLog], score: sessionScore, maxScore: calcMaxScore(selectedMode, selectedGrade, totalQ), isNewPb: false };
+    const session = { id: Date.now(), op: selectedOp, grade: selectedGrade, mode: selectedMode, practiceType, category: selectedCategory, totalQ, correct, wrong: answeredCount - correct, pct, totalSessionMs, avgMs, answeredCount, cancelled: true, timestamp: Date.now(), log: [...sessionLog], score: sessionScore, maxScore: calcMaxScore(selectedMode, selectedGrade, totalQ), isNewPb: false };
     allSessions.unshift(session);
     sessionLog = [];
   }
   stopSessionClock();
   hide('result-section'); hide('quiz-section'); hide('detail-section');
+  const rb=$('conv-ref-box'); if(rb) rb.style.display='none';
   $('home-section').style.display='';
   document.querySelectorAll('.op-card').forEach(c=>c.classList.remove('active'));
-  selectedOp=null; $('start-btn').disabled=true;
+  document.querySelectorAll('.conv-cat-card').forEach(c=>c.classList.remove('active'));
+  selectedOp=null; selectedCategory=null; $('start-btn').disabled=true;
   renderHistory();
   window.scrollTo({top:0,behavior:'smooth'});
 }
