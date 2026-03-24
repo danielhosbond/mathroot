@@ -976,11 +976,11 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   .print-problems { margin-bottom: 0; }
   .print-cols-2   { display: grid; grid-template-columns: 1fr 1fr; column-gap: 36pt; }
   .print-cols-3   { display: grid; grid-template-columns: 1fr 1fr 1fr; column-gap: 28pt; }
-  .print-cols-3 .print-problem { min-height: 96pt; }
+  .print-cols-3 .print-problem { min-height: 80pt; }
 
   .print-problem {
     display: flex; align-items: flex-start; gap: 10pt;
-    padding: 7pt 0; min-height: 58pt;
+    padding: 5pt 0; min-height: 48pt;
     border-bottom: 1px solid #e0e0e0;
     page-break-inside: avoid; break-inside: avoid;
   }
@@ -997,8 +997,8 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   .print-stack-top  { grid-column: 1 / -1; text-align: right; padding-bottom: 1px; }
   .print-stack-op   { text-align: left; align-self: center; }
   .print-stack-num  { text-align: right; }
-  .print-stack-line { grid-column: 1 / -1; border-top: 2px solid #000; margin: 4px 0 5px; }
-  .print-stack-blank { grid-column: 1 / -1; height: 24px; }
+  .print-stack-line { grid-column: 1 / -1; border-top: 2px solid #000; margin: 3pt 0 4pt; }
+  .print-stack-blank { grid-column: 1 / -1; height: 18pt; }
 
   /* ── Answer key (page 2) ── */
   .print-answer-key  { page-break-before: always; break-before: page; padding-top: 20px; }
