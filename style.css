@@ -972,14 +972,15 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 
   /* ── Problems ── */
   .print-problems { margin-bottom: 0; }
-  .print-cols-2   { columns: 2; column-gap: 36px; }
-  .print-cols-3   { columns: 3; column-gap: 28px; }
+  .print-cols-2   { display: grid; grid-template-columns: 1fr 1fr; column-gap: 36px; }
+  .print-cols-3   { display: grid; grid-template-columns: 1fr 1fr 1fr; column-gap: 28px; }
   .print-cols-3 .print-problem { min-height: 136px; }
 
   .print-problem {
     display: flex; align-items: flex-start; gap: 10px;
     padding: 10px 0; min-height: 84px;
-    border-bottom: 1px solid #e0e0e0; break-inside: avoid;
+    border-bottom: 1px solid #e0e0e0;
+    page-break-inside: avoid; break-inside: avoid;
   }
   .print-num { font-size: .68rem; color: #aaa; min-width: 22px; flex-shrink: 0; padding-top: 2px; }
   .print-eq  { font-size: .95rem; font-weight: 700; }
@@ -998,7 +999,7 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   .print-stack-blank { grid-column: 1 / -1; height: 24px; }
 
   /* ── Answer key (page 2) ── */
-  .print-answer-key  { page-break-before: always; padding-top: 20px; }
+  .print-answer-key  { page-break-before: always; break-before: page; padding-top: 20px; }
   .print-ak-header   { border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 14px; }
   .print-ak-title    { font-size: .95rem; font-weight: 700; }
   .print-ak-meta     { font-size: .65rem; color: #888; margin-top: 2px; }

@@ -1346,6 +1346,8 @@ function goHome() {
   }
   stopSessionClock();
   hide('result-section'); hide('quiz-section'); hide('detail-section');
+  $('print-config-section').style.display = 'none';
+  $('print-section').innerHTML = '';
   const rb=$('conv-ref-box'); if(rb) rb.style.display='none';
   $('home-section').style.display='';
   document.querySelectorAll('.op-card').forEach(c=>c.classList.remove('active'));
