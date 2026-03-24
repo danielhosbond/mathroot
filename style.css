@@ -947,9 +947,10 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 }
 
 @media print {
-  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+  * { box-sizing: border-box; }
+  #print-section, #print-section * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   html, body { margin: 0; padding: 0; background: #fff !important; color: #000; width: 100%; }
-  body::before, body::after { display: none !important; }
+  body::before, body::after { content: none !important; display: none !important; background: none !important; }
   body > *:not(#print-section) { display: none !important; visibility: hidden !important; }
 
   #print-section {
