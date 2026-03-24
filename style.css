@@ -949,7 +949,7 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 @media print {
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: #fff; color: #000; width: 100%; }
-  .wrap { display: none !important; }
+  body > *:not(#print-section) { display: none !important; visibility: hidden !important; }
 
   #print-section {
     display: block !important;
