@@ -165,7 +165,7 @@ const TRANSLATIONS = {
     geometry: 'Geometry',
     catShapes: 'Shapes',
     catPerimeter: 'Perimeter',
-    catArea: 'Area',
+    // (catArea is defined once above, under Conversions — geometry reuses it)
     qNameShape: 'What shape is this?',
     qHowManySides: 'How many sides?',
     qHowManyCorners: 'How many corners?',
@@ -205,7 +205,7 @@ const TRANSLATIONS = {
     badgeStreak3: 'On Fire',                     badgeStreak3Desc: 'Reach a 3-day streak',
     badgeStreak7: 'Unstoppable',                 badgeStreak7Desc: 'Reach a 7-day streak',
     badgeStreak30: 'Legend',                     badgeStreak30Desc: 'Reach a 30-day streak',
-    badgeExplorer: 'Explorer',                   badgeExplorerDesc: 'Try all five practice types',
+    badgeExplorer: 'Explorer',                   badgeExplorerDesc: 'Try all six practice types',
     badgeComeback: 'Comeback Kid',               badgeComebackDesc: 'Master 10 of your mistakes',
     badgeLightning: 'Speed Demon',               badgeLightningDesc: 'Under 3s per question, 80%+ correct (10+ questions)',
     badgeTableMaster: 'Table Master',            badgeTableMasterDesc: '100% on a times-table session',
@@ -338,7 +338,7 @@ const TRANSLATIONS = {
     geometry: 'Geometri',
     catShapes: 'Former',
     catPerimeter: 'Omkreds',
-    catArea: 'Areal',
+    // (catArea is defined once above, under Conversions — geometry reuses it)
     qNameShape: 'Hvilken form er det?',
     qHowManySides: 'Hvor mange sider?',
     qHowManyCorners: 'Hvor mange hjørner?',
@@ -378,7 +378,7 @@ const TRANSLATIONS = {
     badgeStreak3: 'I ilden',                     badgeStreak3Desc: 'Nå en stime på 3 dage',
     badgeStreak7: 'Ustoppelig',                  badgeStreak7Desc: 'Nå en stime på 7 dage',
     badgeStreak30: 'Legende',                    badgeStreak30Desc: 'Nå en stime på 30 dage',
-    badgeExplorer: 'Opdagelsesrejsende',         badgeExplorerDesc: 'Prøv alle fem øvelsestyper',
+    badgeExplorer: 'Opdagelsesrejsende',         badgeExplorerDesc: 'Prøv alle seks øvelsestyper',
     badgeComeback: 'Comeback-konge',             badgeComebackDesc: 'Mestr 10 af dine fejl',
     badgeLightning: 'Lynhurtig',                 badgeLightningDesc: 'Under 3 sek. pr. spørgsmål, 80 %+ rigtige (10+ spørgsmål)',
     badgeTableMaster: 'Tabelmester',             badgeTableMasterDesc: '100 % i en gangetabel-session',
@@ -573,7 +573,7 @@ function generateClockChoices(answer) {
   if (swapped !== answer) cand.push(swapped); // hour and minute hands swapped
   cand.push(norm(answer + 60), norm(answer - 60)); // hour hand misread by one
   if (m !== 0 && m !== 30) cand.push(norm(h * 60 + (60 - m))); // minute hand mirrored
-  cand.sort(() => Math.random() - 0.5);
+  shuffle(cand);
 
   const choices = new Set([answer]);
   for (const c of cand) {
@@ -588,7 +588,7 @@ function generateClockChoices(answer) {
     if (c !== answer) choices.add(c);
     tries++;
   }
-  return [...choices].sort(() => Math.random() - 0.5);
+  return shuffle([...choices]);
 }
 
 // ══════════════════════════════════════════
@@ -739,15 +739,14 @@ function generateGeometryQuestion(category) {
 
 function generateGeometryChoices(answer, display) {
   if (display.kind === 'name') {
-    const others = geoShapePool().map(s => s.idx).filter(i => i !== answer).sort(() => Math.random() - 0.5);
-    return [answer, ...others.slice(0, 3)].sort(() => Math.random() - 0.5);
+    const others = shuffle(geoShapePool().map(s => s.idx).filter(i => i !== answer));
+    return shuffle([answer, ...others.slice(0, 3)]);
   }
   const choices = new Set([answer]);
   const add = v => { if (Number.isInteger(v) && v > 0 && v !== answer && choices.size < 4) choices.add(v); };
   const d = display.dims || {};
   if (display.kind === 'count') {
-    [answer + 1, answer - 1, answer + 2, answer - 2, 3, 4, 5, 6, 8]
-      .sort(() => Math.random() - 0.5).forEach(add);
+    shuffle([answer + 1, answer - 1, answer + 2, answer - 2, 3, 4, 5, 6, 8]).forEach(add);
   } else if (display.kind === 'perimeter') {
     // The classic mistake first: computed the area instead
     if (d.s != null) { add(d.s * d.s); add(d.s * 3); }
@@ -765,7 +764,7 @@ function generateGeometryChoices(answer, display) {
     add(answer + randInt(1, 5) * (Math.random() < 0.5 ? 1 : -1));
     tries++;
   }
-  return [...choices].sort(() => Math.random() - 0.5);
+  return shuffle([...choices]);
 }
 
 // ══════════════════════════════════════════
@@ -879,7 +878,7 @@ function generateFractionsChoices(answer, display) {
     add(answer + randInt(1, 5) * (Math.random() < 0.5 ? 1 : -1));
     tries++;
   }
-  return [...choices].sort(() => Math.random() - 0.5);
+  return shuffle([...choices]);
 }
 
 const CONV_CATEGORIES = [
@@ -1135,7 +1134,7 @@ function renderMistakesButton() {
 function startMistakesQuiz() {
   const bank = loadMistakes();
   if (bank.length === 0) return;
-  mistakesQueue = [...bank].sort(() => Math.random() - 0.5).slice(0, 20);
+  mistakesQueue = shuffle([...bank]).slice(0, 20);
   practiceType  = 'mistakes';
   totalQ        = mistakesQueue.length;
   startQuiz();
@@ -1170,7 +1169,7 @@ const BADGES = [
   { id:'streak-3',         icon:'🔥', nameKey:'badgeStreak3',         descKey:'badgeStreak3Desc',         check:(st,se,str)=>str.best>=3 },
   { id:'streak-7',         icon:'⚡', nameKey:'badgeStreak7',         descKey:'badgeStreak7Desc',         check:(st,se,str)=>str.best>=7 },
   { id:'streak-30',        icon:'🌈', nameKey:'badgeStreak30',        descKey:'badgeStreak30Desc',        check:(st,se,str)=>str.best>=30 },
-  { id:'explorer',         icon:'🧭', nameKey:'badgeExplorer',        descKey:'badgeExplorerDesc',        check:(st)=>['math','conversions','times-table','clock','geometry'].every(x=>st.typesPlayed.includes(x)) },
+  { id:'explorer',         icon:'🧭', nameKey:'badgeExplorer',        descKey:'badgeExplorerDesc',        check:(st)=>['math','conversions','times-table','clock','geometry','fractions'].every(x=>st.typesPlayed.includes(x)) },
   { id:'comeback',         icon:'💪', nameKey:'badgeComeback',        descKey:'badgeComebackDesc',        check:(st)=>st.mistakesMastered>=10 },
   { id:'lightning',        icon:'🏎️', nameKey:'badgeLightning',       descKey:'badgeLightningDesc',       check:(st,se)=>!!se&&!se.cancelled&&se.answeredCount>=10&&se.avgMs<3000&&se.pct>=80 },
   { id:'table-master',     icon:'✖️', nameKey:'badgeTableMaster',     descKey:'badgeTableMasterDesc',     check:(st)=>st.tablesPerfected.length>=1 },
@@ -1260,7 +1259,7 @@ function generateConversionChoices(answer, display) {
     if (c > 0 && c !== answer) choices.add(c);
     tries++;
   }
-  return [...choices].slice(0, 4).sort(() => Math.random() - 0.5);
+  return shuffle([...choices].slice(0, 4));
 }
 
 function buildCategoryGrid() {
@@ -1640,6 +1639,15 @@ function savePrefs() { store.set('mathroot-prefs', { count: totalQ, mode: select
 // ══════════════════════════════════════════
 function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
+// Fisher–Yates — shuffles in place and returns the array
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function generateQuestion(op) {
   if (op === 'word') return generateWordQuestion();
   if (op === 'mixed') op = MATH_OPS[randInt(0, MATH_OPS.length - 1)];
@@ -1677,7 +1685,7 @@ function generateChoices(answer, op) {
     if (answer > 200) { offsets.push(100, -100, 200, -200); }
 
     // Shuffle and pick distractors close to the answer
-    offsets.sort(() => Math.random() - 0.5);
+    shuffle(offsets);
 
     for (const o of offsets) {
       if (choices.size >= 4) break;
@@ -1693,7 +1701,7 @@ function generateChoices(answer, op) {
       tries++;
     }
   }
-  return [...choices].sort(() => Math.random() - 0.5);
+  return shuffle([...choices]);
 }
 
 // ══════════════════════════════════════════
@@ -1709,7 +1717,10 @@ function startQuiz() {
 }
 
 function renderQuestion() {
-  answered = false;
+  // Block input until the new question is live — the old card (and its still-active
+  // buttons, e.g. after a cancelled session) stays on screen during the exit animation,
+  // and a tap there would register against the stale question
+  answered = true;
 
   const card = $('question-card');
 
@@ -1722,6 +1733,7 @@ function renderQuestion() {
   setTimeout(() => {
     if (epoch !== quizEpoch || !$('quiz-section').classList.contains('visible')) return;
     // ── Reset state while card is invisible ───────────────────────────────
+    answered = false;
     questionStartTime = Date.now();
     card.classList.remove('correct', 'wrong', 'card-exit');
     const fb = $('feedback-msg');
@@ -2444,7 +2456,27 @@ function closeDetail(){hide('detail-section');goHome();}
 // ══════════════════════════════════════════
 // REPLAY / HOME
 // ══════════════════════════════════════════
-function replaySession() { const op=selectedOp; goHome(); setTimeout(()=>{selectOpByName(op);startQuiz();},20); }
+function replaySession() {
+  // Snapshot the full selection before goHome() clears it — each practice type
+  // keeps its choice in a different variable
+  const snap = {
+    type: practiceType, op: selectedOp, category: selectedCategory, table: selectedTable,
+    clockDir: selectedClockDir, geoCat: selectedGeoCat, fracCat: selectedFracCat,
+  };
+  goHome();
+  setTimeout(() => {
+    if (snap.type === 'mistakes') { startMistakesQuiz(); return; }
+    // Re-select through the card element so the home UI stays in sync if the kid stops early
+    const reselect = (selector, fn) => { const el = document.querySelector(selector); if (el) fn(el); };
+    if (snap.type === 'math')             reselect(`.op-card[data-op="${snap.op}"]`, selectOp);
+    else if (snap.type === 'conversions') reselect(`#conv-grid .conv-cat-card[data-cat="${snap.category}"]`, selectCategory);
+    else if (snap.type === 'times-table') reselect(`#times-grid .times-card[data-table="${snap.table}"]`, selectTimesTable);
+    else if (snap.type === 'clock')       reselect(`#clock-grid .clock-dir-card[data-dir="${snap.clockDir}"]`, selectClockDir);
+    else if (snap.type === 'geometry')    reselect(`#geo-grid .geo-cat-card[data-cat="${snap.geoCat}"]`, selectGeoCat);
+    else if (snap.type === 'fractions')   reselect(`#frac-grid .frac-cat-card[data-cat="${snap.fracCat}"]`, selectFracCat);
+    startQuiz();
+  }, 20);
+}
 function goHome() {
   // If a quiz is active with answers, save it as a stopped session
   if ($('quiz-section').classList.contains('visible') && sessionLog.length > 0) {

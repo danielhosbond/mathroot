@@ -826,7 +826,7 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .res-sub      { font-size: .78rem; color: var(--muted); margin-top: 3px; line-height: 1.4; }
 
 /* bottom button */
-.res-banner-footer { display: flex; justify-content: center; margin-top: 20px; }
+.res-banner-footer { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
 
 /* stat strip */
 .res-scoreband {
