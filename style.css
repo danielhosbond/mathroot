@@ -292,22 +292,22 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .section-label::before { content: ''; width: 20px; height: 1px; background: var(--orange-light); }
 
 /* ══════════════════════════════════════════
-   CARD MIXIN  (shared by op, count, mode)
+   CARD MIXIN  (shared by op, count, mode, duration)
 ══════════════════════════════════════════ */
-.op-card, .count-card, .mode-card {
+.op-card, .count-card, .mode-card, .dur-card {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   cursor: pointer; transition: border-color .2s, transform .15s, box-shadow .2s;
   text-align: center; position: relative; overflow: hidden;
 }
-.op-card::before, .count-card::before, .mode-card::before {
+.op-card::before, .count-card::before, .mode-card::before, .dur-card::before {
   content: ''; position: absolute; inset: 0;
   background: linear-gradient(135deg, var(--orange-glow), transparent);
   opacity: 0; transition: opacity .2s;
 }
-.op-card:hover,    .count-card:hover,    .mode-card:hover    { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 0 20px var(--orange-glow); }
-.op-card:hover::before, .count-card:hover::before, .mode-card:hover::before { opacity: 1; }
-.op-card.active,   .count-card.active,   .mode-card.active   { border-color: var(--orange-light); box-shadow: 0 0 28px var(--orange-glow); background: var(--surface2); }
-.op-card.active::before, .count-card.active::before, .mode-card.active::before { opacity: 1; }
+.op-card:hover,    .count-card:hover,    .mode-card:hover,    .dur-card:hover    { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 0 20px var(--orange-glow); }
+.op-card:hover::before, .count-card:hover::before, .mode-card:hover::before, .dur-card:hover::before { opacity: 1; }
+.op-card.active,   .count-card.active,   .mode-card.active,   .dur-card.active   { border-color: var(--orange-light); box-shadow: 0 0 28px var(--orange-glow); background: var(--surface2); }
+.op-card.active::before, .count-card.active::before, .mode-card.active::before, .dur-card.active::before { opacity: 1; }
 
 /* ══════════════════════════════════════════
    OPERATION GRID
@@ -372,10 +372,15 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 /* ══════════════════════════════════════════
    COUNT GRID
 ══════════════════════════════════════════ */
-.count-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 48px; }
+.count-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 48px; }
 .count-card { padding: 18px 10px; }
 .count-number { font-size: 1.7rem; font-weight: 800; color: var(--orange-light); margin-bottom: 6px; display: block; font-family: 'Space Mono', monospace; }
 .count-label  { font-size: .75rem; font-weight: 600; color: var(--muted); }
+
+/* Sprint duration picker — tucks into the count-grid's bottom margin */
+.sprint-duration-wrap { margin: -34px 0 48px; }
+.sprint-duration-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.dur-card { padding: 14px 10px; }
 
 /* ══════════════════════════════════════════
    MODE GRID
@@ -509,6 +514,9 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 #session-timer {
   min-width: 3.2ch; display: inline-block; text-align: center;
 }
+/* Sprint countdown: final 10 seconds */
+@keyframes timerPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+#session-timer.timer-warning { color: var(--red); animation: timerPulse 1s ease-in-out infinite; }
 .score-item  { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .score-label { font-family: 'Space Mono', monospace; font-size: .65rem; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
 .score-val   { font-family: 'Space Mono', monospace; font-size: 1.4rem; font-weight: 700; }
@@ -958,6 +966,7 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   .op-symbol  { font-size: 1.3rem; margin-bottom: 4px; }
   .op-name    { font-size: .65rem; }
   .count-grid { grid-template-columns: repeat(4,1fr); gap: 8px; }
+  .count-card[data-count="sprint"] { grid-column: 1 / -1; padding: 10px; } /* full-width row so 4+1 doesn't look orphaned */
   .count-number { font-size: 1.3rem; }
   .q-equation { font-size: 2rem; gap: 10px; }
   .q-equation-stacked { font-size: clamp(1.6rem,6vw,2.4rem); }

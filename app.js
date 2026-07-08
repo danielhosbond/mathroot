@@ -219,6 +219,9 @@ const TRANSLATIONS = {
     standard: 'Standard',
     long: 'Long',
     marathon: 'Marathon',
+    sprint: 'Sprint',
+    sprintDuration: 'How long?',
+    timeLeft: 'Left',
     // Mode
     modeQuiz: 'Quiz',
     modeQuizDesc: 'Pick from 4 choices',
@@ -231,6 +234,7 @@ const TRANSLATIONS = {
     stop: '✕ Stop',
     // Question label  (dynamic — use function)
     questionOf: (n, total) => `QUESTION ${n} OF ${total}`,
+    questionN: (n) => `QUESTION ${n}`,
     next: 'Next →',
     seeResults: 'See Results →',
     // Feedback
@@ -258,6 +262,9 @@ const TRANSLATIONS = {
     subKeepGoing: (c, t) => `${c} of ${t} — practice makes perfect!`,
     subKeepTrying: (c, t) => `You got ${c} out of ${t}. You can do better!`,
     subStopped: (a, t, c) => `You answered ${a} of ${t} questions — ${c} correct.`,
+    sprintResultSub: (c, dur) => `${c} correct in ${dur} — great sprinting!`,
+    sprintBest: 'Sprint best',
+    sprintHistMeta: (n) => `⚡ ${n} answered`,
     // History
     stopped: 'stopped',
     questionsShort: (a, t) => `${a}/${t} questions`,
@@ -358,6 +365,7 @@ const TRANSLATIONS = {
     badgeLightning: 'Speed Demon',               badgeLightningDesc: 'Under 3s per question, 80%+ correct (10+ questions)',
     badgeTableMaster: 'Table Master',            badgeTableMasterDesc: '100% on a times-table session',
     badgeGradeClimber: 'Grade Climber',          badgeGradeClimberDesc: 'Complete sessions at 3 different grades',
+    badgeSprinter: 'Sprinter',                   badgeSprinterDesc: 'Get 15+ correct in a single sprint',
     // Profiles
     newProfile: 'New profile',
     profileName: 'Name',
@@ -415,6 +423,9 @@ const TRANSLATIONS = {
     standard: 'Standard',
     long: 'Lang',
     marathon: 'Maraton',
+    sprint: 'Lynrunde',
+    sprintDuration: 'Hvor længe?',
+    timeLeft: 'Tilbage',
     modeQuiz: 'Quiz',
     modeQuizDesc: 'Vælg mellem 4 muligheder',
     modeInput: 'Indtastning',
@@ -424,6 +435,7 @@ const TRANSLATIONS = {
     time: 'Tid',
     stop: '✕ Stop',
     questionOf: (n, total) => `SPØRGSMÅL ${n} AF ${total}`,
+    questionN: (n) => `SPØRGSMÅL ${n}`,
     next: 'Næste →',
     seeResults: 'Se resultater →',
     correctFeedback: '✓ Korrekt!',
@@ -448,6 +460,9 @@ const TRANSLATIONS = {
     subKeepGoing: (c, t) => `${c} af ${t} — øvelse gør mester!`,
     subKeepTrying: (c, t) => `Du fik ${c} ud af ${t}. Du kan gøre det bedre!`,
     subStopped: (a, t, c) => `Du svarede på ${a} af ${t} spørgsmål — ${c} korrekte.`,
+    sprintResultSub: (c, dur) => `${c} rigtige på ${dur} — flot spurtet!`,
+    sprintBest: 'Lynrunde-rekord',
+    sprintHistMeta: (n) => `⚡ ${n} besvaret`,
     stopped: 'stoppet',
     questionsShort: (a, t) => `${a}/${t} spørgsmål`,
     gradeLabel: (n) => `Klasse ${n}`,
@@ -544,6 +559,7 @@ const TRANSLATIONS = {
     badgeLightning: 'Lynhurtig',                 badgeLightningDesc: 'Under 3 sek. pr. spørgsmål, 80 %+ rigtige (10+ spørgsmål)',
     badgeTableMaster: 'Tabelmester',             badgeTableMasterDesc: '100 % i en gangetabel-session',
     badgeGradeClimber: 'Klassekravler',          badgeGradeClimberDesc: 'Gennemfør sessioner på 3 forskellige klassetrin',
+    badgeSprinter: 'Sprinter',                   badgeSprinterDesc: 'Få 15+ rigtige i én lynrunde',
     // Profiles
     newProfile: 'Ny profil',
     profileName: 'Navn',
@@ -1193,6 +1209,9 @@ let selectedGeoCat   = null;
 let selectedFracCat  = null;
 let mistakesQueue    = [];
 let quizEpoch        = 0; // bumped per session so stale timers from a stopped quiz can't fire into a new one
+let sprintMode       = false; // Sprint selected in the count picker
+let sprintDuration   = 60;    // seconds: 60 | 120 | 180
+let sprintDeadline   = 0;     // Date.now() ms; set when a sprint session starts
 
 // ══════════════════════════════════════════
 // SCORING
@@ -1332,6 +1351,7 @@ function startMistakesQuiz() {
   mistakesQueue = shuffle(prioritized); // session order shouldn't be strictly hardest-first
   practiceType  = 'mistakes';
   totalQ        = mistakesQueue.length;
+  sprintMode    = false; // mistakes replays a fixed queue — always count mode; goHome restores sprint from the UI
   startQuiz();
 }
 
@@ -1369,6 +1389,7 @@ const BADGES = [
   { id:'lightning',        icon:'🏎️', nameKey:'badgeLightning',       descKey:'badgeLightningDesc',       check:(st,se)=>!!se&&!se.cancelled&&se.answeredCount>=10&&se.avgMs<3000&&se.pct>=80 },
   { id:'table-master',     icon:'✖️', nameKey:'badgeTableMaster',     descKey:'badgeTableMasterDesc',     check:(st)=>st.tablesPerfected.length>=1 },
   { id:'grade-climber',    icon:'🧗', nameKey:'badgeGradeClimber',    descKey:'badgeGradeClimberDesc',    check:(st)=>st.gradesPlayed.length>=3 },
+  { id:'sprinter',         icon:'🏃', nameKey:'badgeSprinter',        descKey:'badgeSprinterDesc',        check:(st,se)=>!!se&&!se.cancelled&&se.sprint===true&&se.correct>=15 },
 ];
 
 function recordSessionAndAwardBadges(session) {
@@ -1754,7 +1775,8 @@ function applyLang() {
 
   // Re-render quiz section dynamic text if visible
   if ($('quiz-section').classList.contains('visible')) {
-    $('q-label').textContent = t('questionOf')(currentQ + 1, totalQ);
+    $('q-label').textContent = sprintMode ? t('questionN')(currentQ + 1) : t('questionOf')(currentQ + 1, totalQ);
+    if (sprintMode) $('session-timer-label').textContent = t('timeLeft'); // data-i18n pass above reset it to "time"
     renderConvRefBox();
   }
 
@@ -1890,6 +1912,11 @@ function fmtMs(ms) {
   return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 }
 function fmtMsShort(ms) { return `${(ms / 1000).toFixed(1)}s`; }
+// Countdown always renders m:ss — fmtMs would show "45s" below a minute
+function fmtCountdown(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+}
 function fmtNum(n)       { return n.toLocaleString(); }
 function fmtDate(ts) {
   const d = new Date(ts);
@@ -1903,9 +1930,26 @@ function fmtDate(ts) {
 function startSessionClock() {
   sessionStartTime = Date.now();
   clearInterval(sessionTimerID);
-  sessionTimerID = setInterval(() => {
-    $('session-timer').textContent = fmtMs(Date.now() - sessionStartTime);
-  }, 500);
+  if (!sprintMode) {
+    sessionTimerID = setInterval(() => {
+      $('session-timer').textContent = fmtMs(Date.now() - sessionStartTime);
+    }, 500);
+    return;
+  }
+  // Sprint: count down to a wall-clock deadline (keeps elapsing while backgrounded)
+  sprintDeadline = sessionStartTime + sprintDuration * 1000;
+  const tick = () => {
+    const remaining = sprintDeadline - Date.now();
+    $('session-timer').textContent = fmtCountdown(remaining);
+    $('progress-bar').style.width = `${Math.max(0, remaining) / (sprintDuration * 1000) * 100}%`;
+    $('session-timer').classList.toggle('timer-warning', remaining <= 10000 && remaining > 0);
+    if (remaining <= 0) {
+      answered = true; // block any in-flight tap on the current question
+      showResults(false); // calls stopSessionClock, clearing this interval
+    }
+  };
+  tick();
+  sessionTimerID = setInterval(tick, 250); // 250ms so the final second doesn't visibly lag
 }
 function stopSessionClock() { clearInterval(sessionTimerID); sessionTimerID = null; }
 
@@ -1925,7 +1969,15 @@ function selectOpByName(op) {
 function selectCount(el) {
   document.querySelectorAll('.count-card').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  totalQ = parseInt(el.dataset.count, 10);
+  sprintMode = el.dataset.count === 'sprint';
+  if (!sprintMode) totalQ = parseInt(el.dataset.count, 10); // sprint keeps totalQ's last numeric value
+  $('sprint-duration-wrap').style.display = sprintMode ? '' : 'none';
+  savePrefs();
+}
+function selectSprintDuration(el) {
+  document.querySelectorAll('.dur-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  sprintDuration = parseInt(el.dataset.secs, 10);
   savePrefs();
 }
 function selectMode(el) {
@@ -1935,7 +1987,7 @@ function selectMode(el) {
   savePrefs();
   buildClockGrid(); // d2a availability depends on input mode
 }
-function savePrefs() { store.set('mathroot-prefs', { count: totalQ, mode: selectedMode }); }
+function savePrefs() { store.set('mathroot-prefs', { count: totalQ, mode: selectedMode, sprint: sprintMode, sprintDuration }); }
 
 // ══════════════════════════════════════════
 // QUESTION GENERATION
@@ -2030,6 +2082,8 @@ function startQuiz() {
   $('home-section').style.display='none';
   hide('detail-section'); show('quiz-section'); hide('result-section');
   $('session-timer').textContent='0:00';
+  $('session-timer').classList.remove('timer-warning');
+  $('session-timer-label').textContent = t(sprintMode ? 'timeLeft' : 'time');
   startSessionClock(); updateScorebar(); renderConvRefBox(); renderQuestion();
 }
 
@@ -2086,6 +2140,9 @@ function renderQuestion() {
         eqKey = equationKey(q.display, practiceType);
         if (!usedEquations.has(eqKey)) break;
       }
+      // Small pools (e.g. a times table during a long sprint) exhaust the dedup set —
+      // restart the cycle so repeats spread over the whole pool instead of clustering
+      if (usedEquations.has(eqKey)) usedEquations.clear();
       usedEquations.add(eqKey);
       qType = practiceType;
     }
@@ -2131,8 +2188,8 @@ function renderQuestion() {
       renderQuestion._currentEquation = `${display.a} ${display.op} ${display.b}`;
     }
 
-    $('q-label').textContent   = t('questionOf')(currentQ + 1, totalQ);
-    $('q-counter').textContent = `${currentQ + 1}/${totalQ}`;
+    $('q-label').textContent   = sprintMode ? t('questionN')(currentQ + 1) : t('questionOf')(currentQ + 1, totalQ);
+    $('q-counter').textContent = sprintMode ? `${currentQ + 1}` : `${currentQ + 1}/${totalQ}`;
 
     const eqEl = $('q-equation');
     if (display.kind === 'word') {
@@ -2420,7 +2477,7 @@ function handleAnswer(chosen, btnEl) {
     setTimeout(() => {
       // The quiz may have been stopped (or replaced by a new session) during the delay
       if (epoch !== quizEpoch || !$('quiz-section').classList.contains('visible')) return;
-      if (currentQ >= totalQ) showResults(false);
+      if (!sprintMode && currentQ >= totalQ) showResults(false); // sprints only end via the countdown
       else renderQuestion();
     }, delay);
   };
@@ -2437,7 +2494,7 @@ function handleAnswer(chosen, btnEl) {
 function updateScorebar() {
   $('score-correct').textContent=correct;
   $('score-wrong').textContent=wrong;
-  $('progress-bar').style.width=`${((currentQ+1)/totalQ)*100}%`;
+  if (!sprintMode) $('progress-bar').style.width=`${((currentQ+1)/totalQ)*100}%`; // sprint: the clock tick drains it
 }
 
 // ══════════════════════════════════════════
@@ -2574,28 +2631,34 @@ function showResults(cancelled) {
   const avgMs=answeredCount>0?sessionLog.reduce((s,e)=>s+e.elapsedMs,0)/answeredCount:0;
   // Mistakes sessions mix grades, so personal bests aren't comparable — skip PB tracking
   const isMistakes = practiceType === 'mistakes';
+  const isSprint = sprintMode; // startMistakesQuiz forces sprintMode off, so this is authoritative
   const maxScore = isMistakes
     ? mistakesQueue.reduce((s, q) => s + (q.grade || selectedGrade) * 10 * 2, 0)
-    : calcMaxScore(selectedMode,selectedGrade,totalQ);
+    : isSprint
+      ? calcMaxScore(selectedMode,selectedGrade,answeredCount)
+      : calcMaxScore(selectedMode,selectedGrade,totalQ);
   const opKey = isMistakes ? 'mistakes'
     : practiceType === 'times-table' ? `times-table-${selectedTable}`
     : practiceType === 'clock' ? `clock-${selectedClockDir}`
     : practiceType === 'geometry' ? `geometry-${selectedGeoCat}`
     : practiceType === 'fractions' ? `fractions-${selectedFracCat}`
     : selectedOp;
-  const pb = isMistakes ? 0 : getPersonalBest(opKey,selectedGrade,selectedMode);
-  const isNewPb = !isMistakes && !cancelled && sessionScore>pb;
-  if(isNewPb) setPersonalBest(opKey,selectedGrade,selectedMode,sessionScore);
+  // Sprint PBs count correct answers (not points) and live under their own duration-scoped key
+  const pbOpKey = isSprint ? `sprint-${sprintDuration}-${opKey}` : opKey;
+  const pbValue = isSprint ? correct : sessionScore;
+  const pb = isMistakes ? 0 : getPersonalBest(pbOpKey,selectedGrade,selectedMode);
+  const isNewPb = !isMistakes && !cancelled && pbValue>pb;
+  if(isNewPb) setPersonalBest(pbOpKey,selectedGrade,selectedMode,pbValue);
 
   const sessionCategory = practiceType === 'geometry' ? selectedGeoCat : practiceType === 'fractions' ? selectedFracCat : selectedCategory;
-  const session={id:Date.now(),op:opKey,grade:selectedGrade,mode:selectedMode,practiceType,category:sessionCategory,table:selectedTable,totalQ,correct,wrong:answeredCount-correct,pct,totalSessionMs,avgMs,answeredCount,cancelled,timestamp:Date.now(),log:[...sessionLog],score:sessionScore,maxScore,isNewPb};
+  const session={id:Date.now(),op:opKey,grade:selectedGrade,mode:selectedMode,practiceType,category:sessionCategory,table:selectedTable,totalQ:isSprint?answeredCount:totalQ,correct,wrong:answeredCount-correct,pct,totalSessionMs,avgMs,answeredCount,cancelled,timestamp:Date.now(),log:[...sessionLog],score:sessionScore,maxScore,isNewPb,sprint:isSprint||undefined,sprintDuration:isSprint?sprintDuration:undefined};
   session.newBadges = recordSessionAndAwardBadges(session).map(b => b.id);
   allSessions.unshift(session);
   saveSessions();
 
   // One celebration per results screen — perfect score takes precedence
   if (!cancelled && pct === 100) launchConfetti();
-  else if (session.newBadges.length) launchConfetti();
+  else if (session.newBadges.length || session.isNewPb) launchConfetti();
 
   refreshResultSection(session);
 }
@@ -2611,8 +2674,8 @@ function refreshResultSection(session) {
   if(s.score!=null){
     $('res-score-pts').textContent=s.score.toLocaleString();
     $('res-score-max').textContent=`/ ${s.maxScore.toLocaleString()} ${t('points')}`;
-    const pb=getPersonalBest(s.op,s.grade,s.mode);
-    $('res-pb-label').textContent=s.isNewPb?t('newPersonalBest'):pb>0?`${t('personalBest')}: ${pb.toLocaleString()}`:'';
+    const pb=getPersonalBest(s.sprint?`sprint-${s.sprintDuration}-${s.op}`:s.op,s.grade,s.mode);
+    $('res-pb-label').textContent=s.isNewPb?t('newPersonalBest'):pb>0?`${t(s.sprint?'sprintBest':'personalBest')}: ${pb.toLocaleString()}`:'';
   }
 
   const rb = $('res-badges');
@@ -2634,6 +2697,7 @@ function refreshResultSection(session) {
     else if(s.pct>=80){emoji='🎉';title=t('titleGreat');sub=t('subGreat')(s.correct,s.totalQ);}
     else if(s.pct>=60){emoji='👍';title=t('titleGood');sub=t('subGood')(s.correct,s.totalQ);}
     else if(s.pct>=40){emoji='💪';title=t('titleKeepGoing');sub=t('subKeepGoing')(s.correct,s.totalQ);}
+    if(s.sprint) sub=t('sprintResultSub')(s.correct,fmtCountdown(s.sprintDuration*1000));
     $('result-emoji').textContent=emoji; $('result-title').textContent=title; $('result-sub').textContent=sub;
   }
   renderSummaryList($('summary-list'),$('summary-count'),s.log);
@@ -2717,7 +2781,7 @@ function renderHistory() {
         <div class="hist-op-badge">${sym}</div>
         <div class="hist-info">
           <span class="hist-op-name">${opLabel}${stopped}<span class="hist-chip hist-chip-grade">${gradeLabel}</span><span class="hist-chip hist-chip-mode">${modeLabel}</span></span>
-          <span class="hist-meta">${fmtDate(s.timestamp)} · ${t('questionsShort')(s.answeredCount,s.totalQ)} · ${fmtMs(s.totalSessionMs)}</span>
+          <span class="hist-meta">${fmtDate(s.timestamp)} · ${s.sprint?t('sprintHistMeta')(s.answeredCount):t('questionsShort')(s.answeredCount,s.totalQ)} · ${fmtMs(s.totalSessionMs)}</span>
         </div>
         ${scoreDisplay}
         <div class="hist-chevron">›</div>
@@ -2764,7 +2828,7 @@ function openDetail(index) {
 
   $('detail-emoji').textContent=emoji;
   $('detail-title').textContent=`${title} — ${opLabel}`;
-  $('detail-sub').textContent=`${fmtDate(s.timestamp)} · ${sub}`;
+  $('detail-sub').textContent=`${fmtDate(s.timestamp)} · ${sub}${s.sprint?` · ⚡ ${fmtCountdown(s.sprintDuration*1000)}`:''}`;
   $('detail-correct').textContent=s.correct; $('detail-wrong').textContent=s.wrong;
   $('detail-pct').textContent=s.pct+'%'; $('detail-duration').textContent=fmtMs(s.totalSessionMs);
   $('detail-avg').textContent=s.answeredCount>0?fmtMsShort(s.avgMs):'—';
@@ -2774,8 +2838,8 @@ function openDetail(index) {
   if(s.score!=null){
     $('detail-score-pts').textContent=s.score.toLocaleString();
     $('detail-score-max').textContent=`/ ${s.maxScore.toLocaleString()} ${t('points')}`;
-    const pb=getPersonalBest(s.op,s.grade,s.mode);
-    $('detail-pb-label').textContent=s.isNewPb?t('newPersonalBest'):pb>0?`${t('personalBest')}: ${pb.toLocaleString()}`:'';
+    const pb=getPersonalBest(s.sprint?`sprint-${s.sprintDuration}-${s.op}`:s.op,s.grade,s.mode);
+    $('detail-pb-label').textContent=s.isNewPb?t('newPersonalBest'):pb>0?`${t(s.sprint?'sprintBest':'personalBest')}: ${pb.toLocaleString()}`:'';
   }
 
   renderSummaryList($('detail-list'),$('detail-count'),s.log);
@@ -2825,18 +2889,20 @@ function goHome() {
       : selectedOp;
     const maxScore = practiceType === 'mistakes'
       ? mistakesQueue.reduce((s, q) => s + (q.grade || selectedGrade) * 10 * 2, 0)
-      : calcMaxScore(selectedMode, selectedGrade, totalQ);
+      : calcMaxScore(selectedMode, selectedGrade, sprintMode ? answeredCount : totalQ);
     const sessionCategory = practiceType === 'geometry' ? selectedGeoCat : practiceType === 'fractions' ? selectedFracCat : selectedCategory;
-    const session = { id: Date.now(), op: opKey, grade: selectedGrade, mode: selectedMode, practiceType, category: sessionCategory, table: selectedTable, totalQ, correct, wrong: answeredCount - correct, pct, totalSessionMs, avgMs, answeredCount, cancelled: true, timestamp: Date.now(), log: [...sessionLog], score: sessionScore, maxScore, isNewPb: false };
+    const session = { id: Date.now(), op: opKey, grade: selectedGrade, mode: selectedMode, practiceType, category: sessionCategory, table: selectedTable, totalQ: sprintMode ? answeredCount : totalQ, correct, wrong: answeredCount - correct, pct, totalSessionMs, avgMs, answeredCount, cancelled: true, timestamp: Date.now(), log: [...sessionLog], score: sessionScore, maxScore, isNewPb: false, sprint: sprintMode || undefined, sprintDuration: sprintMode ? sprintDuration : undefined };
     session.newBadges = recordSessionAndAwardBadges(session).map(b => b.id);
     allSessions.unshift(session);
     saveSessions();
     sessionLog = [];
   }
   stopSessionClock();
-  // A mistakes session overrides practiceType and totalQ — restore them from the home-screen UI
+  // A mistakes session overrides practiceType, totalQ and sprintMode — restore them from the home-screen UI
   practiceType = document.querySelector('.practice-btn.active')?.dataset.type || 'math';
-  totalQ = parseInt(document.querySelector('.count-card.active')?.dataset.count || '10', 10);
+  const activeCount = document.querySelector('.count-card.active')?.dataset.count || '10';
+  sprintMode = activeCount === 'sprint';
+  if (!sprintMode) totalQ = parseInt(activeCount, 10);
   hide('result-section'); hide('quiz-section'); hide('detail-section');
   $('print-config-section').style.display = 'none';
   $('print-section').innerHTML = '';
@@ -3225,6 +3291,15 @@ const savedPrefs = store.get('mathroot-prefs', {}) || {};
 if ([10, 20, 30, 40].includes(savedPrefs.count)) {
   totalQ = savedPrefs.count;
   document.querySelectorAll('.count-card').forEach(c => c.classList.toggle('active', parseInt(c.dataset.count, 10) === totalQ));
+}
+if ([60, 120, 180].includes(savedPrefs.sprintDuration)) {
+  sprintDuration = savedPrefs.sprintDuration;
+  document.querySelectorAll('.dur-card').forEach(c => c.classList.toggle('active', parseInt(c.dataset.secs, 10) === sprintDuration));
+}
+if (savedPrefs.sprint === true) {
+  sprintMode = true;
+  document.querySelectorAll('.count-card').forEach(c => c.classList.toggle('active', c.dataset.count === 'sprint'));
+  $('sprint-duration-wrap').style.display = '';
 }
 if (savedPrefs.mode === 'quiz' || savedPrefs.mode === 'input') {
   selectedMode = savedPrefs.mode;

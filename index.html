@@ -185,6 +185,26 @@
         <span class="count-number">40</span>
         <div class="count-label" data-i18n="marathon"></div>
       </div>
+      <div class="count-card" data-count="sprint" onclick="selectCount(this)">
+        <span class="count-number">⚡</span>
+        <div class="count-label" data-i18n="sprint"></div>
+      </div>
+    </div>
+
+    <!-- Sprint duration picker (shown when Sprint is selected) -->
+    <div class="sprint-duration-wrap" id="sprint-duration-wrap" style="display:none;">
+      <div class="section-label" data-i18n="sprintDuration"></div>
+      <div class="sprint-duration-grid">
+        <div class="dur-card active" data-secs="60" onclick="selectSprintDuration(this)">
+          <span class="count-number">1:00</span>
+        </div>
+        <div class="dur-card" data-secs="120" onclick="selectSprintDuration(this)">
+          <span class="count-number">2:00</span>
+        </div>
+        <div class="dur-card" data-secs="180" onclick="selectSprintDuration(this)">
+          <span class="count-number">3:00</span>
+        </div>
+      </div>
     </div>
 
     <!-- Input mode picker -->
@@ -290,7 +310,7 @@
         </div>
         <div class="scorebar-divider"></div>
         <div class="score-item">
-          <span class="score-label" data-i18n="time"></span>
+          <span class="score-label" data-i18n="time" id="session-timer-label"></span>
           <span class="score-val" id="session-timer">0:00</span>
         </div>
       </div>
