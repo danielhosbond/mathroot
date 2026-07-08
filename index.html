@@ -4,6 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>MathRoot</title>
+  <meta name="theme-color" content="#0d0d10"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="icon" href="icons/icon-192.png" type="image/png"/>
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="MathRoot"/>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
 </head>
@@ -17,6 +24,16 @@
       <span class="logo-text">MathRoot</span>
     </button>
     <div class="header-controls">
+
+      <!-- Profile picker -->
+      <div class="profile-picker" id="profile-picker">
+        <button class="lang-btn profile-btn" id="profile-btn" onclick="toggleProfileMenu()" aria-haspopup="listbox" aria-expanded="false">
+          <span id="profile-btn-emoji">🦊</span>
+          <span id="profile-btn-label" class="profile-btn-name"></span>
+          <span class="grade-chevron">▾</span>
+        </button>
+        <div class="lang-menu profile-menu" id="profile-menu" role="listbox"></div>
+      </div>
 
       <!-- Theme toggle -->
       <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode" aria-label="Toggle theme">
@@ -132,6 +149,10 @@
         <span class="op-symbol">÷</span>
         <div class="op-name" data-i18n="division"></div>
       </div>
+      <div class="op-card" data-op="missing" onclick="selectOp(this)">
+        <span class="op-symbol">?</span>
+        <div class="op-name" data-i18n="missingNumber"></div>
+      </div>
       <div class="op-card" data-op="mixed" onclick="selectOp(this)">
         <span class="op-symbol">±</span>
         <div class="op-name" data-i18n="mixed"></div>
@@ -205,6 +226,18 @@
     </div>
     <div class="print-open-row">
       <button class="btn-print-open" onclick="openPrintConfig()" data-i18n="printWorksheet"></button>
+    </div>
+
+    <!-- My skills -->
+    <div class="skills-section" id="skills-section" style="display:none;">
+      <div class="history-header">
+        <div class="section-label" style="margin-bottom:0;" data-i18n="mySkills"></div>
+      </div>
+      <div class="skills-list" id="skills-list"></div>
+      <div class="skills-tables-wrap" id="skills-tables-wrap" style="display:none;">
+        <div class="skills-tables-label" data-i18n="timesTable"></div>
+        <div class="skills-tables" id="skills-tables"></div>
+      </div>
     </div>
 
     <!-- Badges -->
@@ -417,6 +450,20 @@
 
 <!-- Print-only worksheet — hidden on screen, shown in @media print -->
 <div id="print-section" aria-hidden="true"></div>
+
+<!-- ── NEW PROFILE MODAL ── -->
+<div class="profile-modal-overlay" id="profile-modal" style="display:none;">
+  <div class="profile-modal">
+    <div class="profile-modal-title" id="profile-modal-title"></div>
+    <input id="profile-name-input" class="profile-name-input" maxlength="16" autocomplete="off"
+           onkeydown="if(event.key==='Enter')confirmAddProfile()"/>
+    <div class="profile-emoji-grid" id="profile-emoji-grid"></div>
+    <div class="profile-modal-actions">
+      <button class="btn-secondary" onclick="closeProfileModal()" data-i18n="cancel"></button>
+      <button class="btn-submit" onclick="confirmAddProfile()" data-i18n="create"></button>
+    </div>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>

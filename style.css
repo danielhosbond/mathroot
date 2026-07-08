@@ -1162,3 +1162,144 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   .print-ak-grid span { font-size: .82rem; }
 }
 
+
+/* ══════════════════════════════════════════
+   PROFILES
+══════════════════════════════════════════ */
+.profile-picker { position: relative; }
+
+.profile-btn-name {
+  max-width: 82px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.profile-menu { width: 190px; }
+
+.profile-option { position: relative; padding-right: 34px; }
+
+.profile-delete {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 22px; height: 22px; border: none; border-radius: 6px;
+  background: transparent; color: var(--muted); font-size: .7rem;
+  cursor: pointer; line-height: 1;
+}
+.profile-delete:hover { background: var(--red-badge-bg); color: var(--red); }
+
+.profile-add { border-top: 1px solid var(--border); }
+.profile-add .lang-name { color: var(--muted); }
+.profile-add:hover .lang-name { color: var(--orange-light); }
+
+/* ── New-profile modal ── */
+.profile-modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--shadow-heavy); padding: 20px;
+}
+
+.profile-modal {
+  width: 100%; max-width: 340px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: 0 24px 64px var(--shadow-heavy);
+  padding: 22px;
+}
+
+.profile-modal-title {
+  font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 800;
+  letter-spacing: -.3px; margin-bottom: 16px;
+}
+
+.profile-name-input {
+  width: 100%; height: 42px; padding: 0 12px; margin-bottom: 16px;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-family: 'Space Mono', monospace; font-size: .85rem; font-weight: 700;
+  outline: none; transition: border-color .2s, box-shadow .2s;
+}
+.profile-name-input:focus { border-color: var(--orange); box-shadow: 0 0 12px var(--orange-glow); }
+
+.profile-emoji-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-bottom: 20px;
+}
+
+.profile-emoji-btn {
+  aspect-ratio: 1; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface2); font-size: 1.15rem; cursor: pointer;
+  transition: border-color .15s, transform .15s;
+}
+.profile-emoji-btn:hover  { border-color: var(--orange); transform: scale(1.08); }
+.profile-emoji-btn.active { border-color: var(--orange); background: var(--orange-tint); box-shadow: 0 0 10px var(--orange-glow); }
+
+.profile-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.profile-modal-actions .btn-submit,
+.profile-modal-actions .btn-secondary { padding: 10px 18px; font-size: .75rem; }
+
+@media (max-width: 600px) {
+  .profile-btn-name { display: none; } /* emoji-only in the tight mobile header */
+  .profile-btn { padding: 0 10px; }
+}
+
+/* ══════════════════════════════════════════
+   MY SKILLS
+══════════════════════════════════════════ */
+.skills-section { margin-top: 48px; }
+
+.skill-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; margin-bottom: 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+}
+
+.skill-icon {
+  width: 34px; height: 34px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--orange-light); font-family: 'Space Mono', monospace; font-size: .85rem; font-weight: 700;
+}
+
+.skill-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.skill-name { font-size: .8rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skill-meta { font-family: 'Space Mono', monospace; font-size: .6rem; color: var(--muted); white-space: nowrap; }
+
+.skill-bar {
+  flex: 1.2; height: 8px; min-width: 60px;
+  background: var(--surface2); border-radius: 4px; overflow: hidden;
+}
+.skill-bar-inner { height: 100%; border-radius: 4px; transition: width .4s ease; }
+.skill-bar-inner.skill-green  { background: var(--green); }
+.skill-bar-inner.skill-orange { background: var(--orange-light); }
+.skill-bar-inner.skill-red    { background: var(--red); }
+
+.skill-pct { width: 44px; flex-shrink: 0; text-align: right; font-family: 'Space Mono', monospace; font-size: .75rem; font-weight: 700; }
+.skill-pct.skill-green  { color: var(--green); }
+.skill-pct.skill-orange { color: var(--orange-light); }
+.skill-pct.skill-red    { color: var(--red); }
+
+.skills-tables-wrap  { margin-top: 18px; }
+.skills-tables-label {
+  font-family: 'Space Mono', monospace; font-size: .6rem; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+}
+
+.skills-tables { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+
+.skill-table-chip {
+  aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  cursor: pointer; transition: border-color .15s, transform .15s;
+}
+.skill-table-chip:hover { border-color: var(--orange); transform: translateY(-1px); }
+
+.skill-table-num { font-family: 'Space Mono', monospace; font-size: .72rem; font-weight: 700; color: var(--muted); }
+.skill-table-sub { font-family: 'Space Mono', monospace; font-size: .5rem; color: var(--muted); }
+
+.skill-table-chip.practiced { border-color: var(--orange-chip-bdr); background: var(--orange-tint); }
+.skill-table-chip.practiced .skill-table-num { color: var(--orange-light); }
+.skill-table-chip.practiced .skill-table-sub { color: var(--orange-light); }
+
+.skill-table-chip.mastered { border-color: var(--green); background: var(--green-tint); }
+.skill-table-chip.mastered .skill-table-num { color: var(--green); }
+.skill-table-chip.mastered .skill-table-sub { color: var(--green); }
+
+@media (max-width: 600px) {
+  .skills-tables { grid-template-columns: repeat(5, 1fr); }
+  .skill-bar { flex: 1; min-width: 44px; }
+  .skill-meta { font-size: .55rem; }
+}

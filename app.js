@@ -29,14 +29,157 @@ applyTheme(getPreferredTheme());
 const store = {
   get(key, fallback) {
     try {
-      const raw = localStorage.getItem(key);
+      const raw = localStorage.getItem(profileKey(key));
       return raw === null ? fallback : JSON.parse(raw);
     } catch { return fallback; }
   },
   set(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+    try { localStorage.setItem(profileKey(key), JSON.stringify(value)); } catch {}
   },
 };
+
+// ══════════════════════════════════════════
+// PROFILES  (per-child data isolation)
+// ══════════════════════════════════════════
+// Progress data is scoped per profile by rewriting its storage keys to
+// `mathroot-p<id>-…` inside store/pbKey. Device-level keys (theme, lang,
+// the profile registry itself) stay unscoped.
+const PROFILE_SCOPED = new Set([
+  'mathroot-sessions', 'mathroot-grade', 'mathroot-prefs',
+  'mathroot-streak', 'mathroot-mistakes', 'mathroot-stats', 'mathroot-badges',
+]);
+const PROFILE_EMOJI = ['🦊', '🐼', '🦄', '🐸', '🐯', '🐙', '🦖', '🐧', '🐨', '🚀', '⭐', '🌈'];
+
+let profiles = [];          // [{id, name, emoji}]
+let activeProfileId = null;
+
+function profileKey(key) {
+  return PROFILE_SCOPED.has(key) && activeProfileId != null
+    ? key.replace('mathroot-', `mathroot-p${activeProfileId}-`)
+    : key;
+}
+
+function activeProfile() { return profiles.find(p => p.id === activeProfileId) || profiles[0]; }
+
+function initProfiles() {
+  const stored = store.get('mathroot-profiles', null);
+  if (Array.isArray(stored) && stored.length > 0) {
+    profiles = stored;
+  } else {
+    // First run with profiles — create a default one and adopt any pre-profile
+    // data by renaming its keys into the new profile's namespace
+    const name = (navigator.language || '').toLowerCase().startsWith('da') ? 'Spiller 1' : 'Player 1';
+    profiles = [{ id: 1, name, emoji: '🦊' }];
+    store.set('mathroot-profiles', profiles);
+    const legacy = [...PROFILE_SCOPED];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('mathroot-pb-')) legacy.push(k);
+    }
+    for (const k of legacy) {
+      const raw = localStorage.getItem(k);
+      if (raw !== null) {
+        try { localStorage.setItem(k.replace('mathroot-', 'mathroot-p1-'), raw); } catch {}
+        localStorage.removeItem(k);
+      }
+    }
+  }
+  const savedActive = store.get('mathroot-active-profile', null);
+  activeProfileId = profiles.some(p => p.id === savedActive) ? savedActive : profiles[0].id;
+  store.set('mathroot-active-profile', activeProfileId);
+}
+initProfiles();
+
+function selectProfile(id) {
+  if (id !== activeProfileId) {
+    store.set('mathroot-active-profile', id);
+    // Full reload — every widget re-reads the new profile's state on init
+    location.reload();
+  }
+  $('profile-menu').classList.remove('open');
+  $('profile-btn').setAttribute('aria-expanded', 'false');
+}
+
+function deleteProfile(id, event) {
+  if (event) event.stopPropagation(); // don't also switch to the profile being deleted
+  if (profiles.length <= 1) return;
+  const victim = profiles.find(p => p.id === id);
+  if (!victim || !confirm(t('deleteProfileConfirm')(victim.name))) return;
+  profiles = profiles.filter(p => p.id !== id);
+  store.set('mathroot-profiles', profiles);
+  const prefix = `mathroot-p${id}-`;
+  const doomed = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(prefix)) doomed.push(k);
+  }
+  doomed.forEach(k => localStorage.removeItem(k));
+  if (activeProfileId === id) {
+    store.set('mathroot-active-profile', profiles[0].id);
+    location.reload();
+  } else {
+    renderProfileUI();
+  }
+}
+
+function toggleProfileMenu() {
+  const open = $('profile-menu').classList.toggle('open');
+  $('profile-btn').setAttribute('aria-expanded', String(open));
+}
+
+function renderProfileUI() {
+  const p = activeProfile();
+  if (!p) return;
+  $('profile-btn-emoji').textContent = p.emoji;
+  $('profile-btn-label').textContent = p.name;
+  $('profile-menu').innerHTML = profiles.map(pr => `
+    <div class="lang-option profile-option${pr.id === activeProfileId ? ' active' : ''}" role="option" onclick="selectProfile(${pr.id})">
+      <span class="lang-flag">${pr.emoji}</span><span class="lang-name">${escapeHTML(pr.name)}</span>
+      ${profiles.length > 1 ? `<button class="profile-delete" title="${t('deleteProfile')}" onclick="deleteProfile(${pr.id}, event)">✕</button>` : ''}
+    </div>`).join('')
+    + `<div class="lang-option profile-add" role="option" onclick="openProfileModal()">
+        <span class="lang-flag">＋</span><span class="lang-name">${t('newProfile')}</span>
+      </div>`;
+}
+
+let profileModalEmoji = null;
+
+function openProfileModal() {
+  $('profile-menu').classList.remove('open');
+  $('profile-btn').setAttribute('aria-expanded', 'false');
+  const used = new Set(profiles.map(p => p.emoji));
+  profileModalEmoji = PROFILE_EMOJI.find(e => !used.has(e)) || PROFILE_EMOJI[0];
+  $('profile-emoji-grid').innerHTML = PROFILE_EMOJI.map(e =>
+    `<button class="profile-emoji-btn${e === profileModalEmoji ? ' active' : ''}" data-emoji="${e}" onclick="pickProfileEmoji(this)">${e}</button>`
+  ).join('');
+  const input = $('profile-name-input');
+  input.value = '';
+  input.placeholder = t('profileName');
+  $('profile-modal-title').textContent = t('newProfile');
+  $('profile-modal').style.display = '';
+  input.focus();
+}
+
+function closeProfileModal() { $('profile-modal').style.display = 'none'; }
+
+function pickProfileEmoji(el) {
+  profileModalEmoji = el.dataset.emoji;
+  document.querySelectorAll('.profile-emoji-btn').forEach(b => b.classList.toggle('active', b === el));
+}
+
+function confirmAddProfile() {
+  const name = $('profile-name-input').value.trim().slice(0, 16)
+    || `${t('playerFallback')} ${profiles.length + 1}`;
+  const id = Math.max(0, ...profiles.map(p => p.id)) + 1;
+  profiles.push({ id, name, emoji: profileModalEmoji || PROFILE_EMOJI[0] });
+  store.set('mathroot-profiles', profiles);
+  store.set('mathroot-active-profile', id);
+  location.reload();
+}
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
 
 const MAX_SAVED_SESSIONS = 50;
 function saveSessions() {
@@ -70,6 +213,7 @@ const TRANSLATIONS = {
     division: 'Division',
     mixed: 'Mixed',
     wordProblems: 'Word problems',
+    missingNumber: 'Missing number',
     // Count labels
     quick: 'Quick',
     standard: 'Standard',
@@ -193,6 +337,10 @@ const TRANSLATIONS = {
     // Mistakes
     practiceMistakes: (n) => `Practice mistakes (${n})`,
     mistakesPractice: 'Mistake practice',
+    mistakeOneMore: 'One more to master it!',
+    mistakeMastered: 'Mastered! 🎉',
+    // Skills
+    mySkills: 'My skills',
     // Badges
     badges: 'Badges',
     newBadge: 'New badge!',
@@ -210,6 +358,14 @@ const TRANSLATIONS = {
     badgeLightning: 'Speed Demon',               badgeLightningDesc: 'Under 3s per question, 80%+ correct (10+ questions)',
     badgeTableMaster: 'Table Master',            badgeTableMasterDesc: '100% on a times-table session',
     badgeGradeClimber: 'Grade Climber',          badgeGradeClimberDesc: 'Complete sessions at 3 different grades',
+    // Profiles
+    newProfile: 'New profile',
+    profileName: 'Name',
+    create: 'Create',
+    cancel: 'Cancel',
+    deleteProfile: 'Delete profile',
+    deleteProfileConfirm: (name) => `Delete ${name}? All progress, streaks and badges for this profile will be lost.`,
+    playerFallback: 'Player',
     // Print worksheet
     printWorksheet: 'Print Worksheet',
     printSavePdf:   'Print / Save as PDF',
@@ -254,6 +410,7 @@ const TRANSLATIONS = {
     division: 'Division',
     mixed: 'Blandet',
     wordProblems: 'Regnehistorier',
+    missingNumber: 'Ukendt tal',
     quick: 'Kort',
     standard: 'Standard',
     long: 'Lang',
@@ -366,6 +523,10 @@ const TRANSLATIONS = {
     // Mistakes
     practiceMistakes: (n) => `Øv dine fejl (${n})`,
     mistakesPractice: 'Fejltræning',
+    mistakeOneMore: 'Én mere, så er den mestret!',
+    mistakeMastered: 'Mestret! 🎉',
+    // Skills
+    mySkills: 'Mine færdigheder',
     // Badges
     badges: 'Mærker',
     newBadge: 'Nyt mærke!',
@@ -383,6 +544,14 @@ const TRANSLATIONS = {
     badgeLightning: 'Lynhurtig',                 badgeLightningDesc: 'Under 3 sek. pr. spørgsmål, 80 %+ rigtige (10+ spørgsmål)',
     badgeTableMaster: 'Tabelmester',             badgeTableMasterDesc: '100 % i en gangetabel-session',
     badgeGradeClimber: 'Klassekravler',          badgeGradeClimberDesc: 'Gennemfør sessioner på 3 forskellige klassetrin',
+    // Profiles
+    newProfile: 'Ny profil',
+    profileName: 'Navn',
+    create: 'Opret',
+    cancel: 'Annuller',
+    deleteProfile: 'Slet profil',
+    deleteProfileConfirm: (name) => `Slet ${name}? Alle fremskridt, stimer og mærker for denne profil går tabt.`,
+    playerFallback: 'Spiller',
     // Print worksheet
     printWorksheet: 'Print arbejdsark',
     printSavePdf:   'Print / Gem som PDF',
@@ -892,9 +1061,9 @@ const CONV_CATEGORIES = [
 const OP_META_KEYS = {
   addition: 'addition', subtraction: 'subtraction',
   multiplication: 'multiplication', division: 'division',
-  mixed: 'mixed', word: 'wordProblems',
+  mixed: 'mixed', word: 'wordProblems', missing: 'missingNumber',
 };
-const OP_SYMBOLS = { addition:'+', subtraction:'−', multiplication:'×', division:'÷', mixed:'±', word:'📖' };
+const OP_SYMBOLS = { addition:'+', subtraction:'−', multiplication:'×', division:'÷', mixed:'±', word:'📖', missing:'?' };
 const MATH_OPS   = ['addition', 'subtraction', 'multiplication', 'division'];
 
 // ══════════════════════════════════════════
@@ -1038,7 +1207,7 @@ function calcQuestionScore(mode, grade, elapsedMs, wasCorrect, type='math') {
   return Math.round(base * multiplier);
 }
 function calcMaxScore(mode, grade, totalQ) { return totalQ * grade * 10 * 2; }
-function pbKey(op, grade, mode) { return `mathroot-pb-${op}-${grade}-${mode}`; }
+function pbKey(op, grade, mode) { return `mathroot-p${activeProfileId}-pb-${op}-${grade}-${mode}`; }
 function getPersonalBest(op, grade, mode) { return parseInt(localStorage.getItem(pbKey(op, grade, mode)) || '0', 10); }
 function setPersonalBest(op, grade, mode, score) { localStorage.setItem(pbKey(op, grade, mode), String(score)); }
 
@@ -1099,6 +1268,8 @@ function loadMistakes() {
 }
 function saveMistakesBank(bank) { store.set('mathroot-mistakes', bank.slice(-MAX_MISTAKES)); }
 
+const MISTAKE_MASTER_STREAK = 2; // consecutive correct answers needed to master a mistake
+
 function addMistake(cq) {
   if (!cq || !cq.key || cq.answer == null) return;
   const bank = loadMistakes();
@@ -1106,11 +1277,13 @@ function addMistake(cq) {
   if (existing) {
     existing.timesWrong = (existing.timesWrong || 0) + 1;
     existing.lastMissed = Date.now();
+    existing.lastSeen   = Date.now();
+    existing.streak     = 0; // wrong again — mastery progress resets
   } else {
     bank.push({
       key: cq.key, display: cq.display, answer: cq.answer,
       practiceType: cq.practiceType, opUsed: cq.opUsed || null, category: cq.category || null,
-      grade: cq.grade, timesWrong: 1, lastMissed: Date.now(),
+      grade: cq.grade, timesWrong: 1, lastMissed: Date.now(), lastSeen: Date.now(), streak: 0,
     });
   }
   saveMistakesBank(bank);
@@ -1123,6 +1296,21 @@ function removeMistake(key) {
   saveStats(stats);
 }
 
+// Correct answer in mistake practice — returns true once the mistake is mastered
+function creditMistake(key) {
+  const bank = loadMistakes();
+  const entry = bank.find(e => e.key === key);
+  if (!entry) return true;
+  entry.streak   = (entry.streak || 0) + 1;
+  entry.lastSeen = Date.now();
+  if (entry.streak >= MISTAKE_MASTER_STREAK) {
+    removeMistake(key);
+    return true;
+  }
+  saveMistakesBank(bank);
+  return false;
+}
+
 function renderMistakesButton() {
   const row = $('mistakes-row');
   if (!row) return;
@@ -1131,10 +1319,17 @@ function renderMistakesButton() {
   if (n > 0) $('mistakes-label').textContent = t('practiceMistakes')(n);
 }
 
+// Lightweight spaced repetition: often-missed and longest-unseen mistakes first
+function mistakePriority(m) {
+  const daysSinceSeen = (Date.now() - (m.lastSeen || m.lastMissed || 0)) / 86400000;
+  return (m.timesWrong || 1) + Math.min(daysSinceSeen, 7) + Math.random(); // jitter breaks ties
+}
+
 function startMistakesQuiz() {
   const bank = loadMistakes();
   if (bank.length === 0) return;
-  mistakesQueue = shuffle([...bank]).slice(0, 20);
+  const prioritized = [...bank].sort((a, b) => mistakePriority(b) - mistakePriority(a)).slice(0, 20);
+  mistakesQueue = shuffle(prioritized); // session order shouldn't be strictly hardest-first
   practiceType  = 'mistakes';
   totalQ        = mistakesQueue.length;
   startQuiz();
@@ -1218,6 +1413,104 @@ function renderBadges() {
       </div>
     </div>`;
   }).join('');
+}
+
+// ══════════════════════════════════════════
+// MY SKILLS  (per-skill accuracy from saved session logs)
+// ══════════════════════════════════════════
+const SKILL_ROWS = [
+  { key:'addition',       icon:'+',  labelKey:'addition' },
+  { key:'subtraction',    icon:'−',  labelKey:'subtraction' },
+  { key:'multiplication', icon:'×',  labelKey:'multiplication' },
+  { key:'division',       icon:'÷',  labelKey:'division' },
+  { key:'missing',        icon:'?',  labelKey:'missingNumber' },
+  { key:'word',           icon:'📖', labelKey:'wordProblems' },
+  { key:'times-table',    icon:'×',  labelKey:'timesTable' },
+  { key:'conversions',    icon:'m',  labelKey:'conversions' },
+  { key:'clock',          icon:'🕐', labelKey:'clock' },
+  { key:'geometry',       icon:'△',  labelKey:'geometry' },
+  { key:'fractions',      icon:'½',  labelKey:'fractions' },
+];
+const MIXED_SYMBOL_OPS = { '+':'addition', '−':'subtraction', '×':'multiplication', '÷':'division' };
+
+function computeSkillStats() {
+  const buckets = {}; // skill key -> {correct, total, timeMs}
+  const tables  = {}; // table n   -> {correct, total}
+  const bump = (key, e) => {
+    const b = buckets[key] ?? (buckets[key] = { correct: 0, total: 0, timeMs: 0 });
+    b.total++; if (e.wasCorrect) b.correct++; b.timeMs += e.elapsedMs || 0;
+  };
+  for (const s of allSessions) {
+    // Mistake sessions mix skills and their log lines don't carry a type — skip
+    if (s.practiceType === 'mistakes') continue;
+    for (const e of s.log || []) {
+      let key;
+      if (s.practiceType === 'times-table') {
+        key = 'times-table';
+        const tb = tables[s.table] ?? (tables[s.table] = { correct: 0, total: 0 });
+        tb.total++; if (e.wasCorrect) tb.correct++;
+      } else if (!s.practiceType || s.practiceType === 'math') {
+        // Mixed sessions: attribute each question by the operator in its equation
+        key = s.op === 'mixed'
+          ? MIXED_SYMBOL_OPS[(String(e.equation).match(/[+−×÷]/) || [])[0]] || null
+          : s.op;
+      } else {
+        key = s.practiceType;
+      }
+      if (key) bump(key, e);
+    }
+  }
+  return { buckets, tables };
+}
+
+function renderSkills() {
+  const sec = $('skills-section');
+  if (!sec) return;
+  const { buckets, tables } = computeSkillStats();
+  const rows = SKILL_ROWS.filter(r => buckets[r.key] && buckets[r.key].total > 0);
+  if (rows.length === 0) { sec.style.display = 'none'; return; }
+  sec.style.display = '';
+
+  $('skills-list').innerHTML = rows.map(r => {
+    const b = buckets[r.key];
+    const pct = Math.round((b.correct / b.total) * 100);
+    const cls = pct >= 85 ? 'skill-green' : pct >= 60 ? 'skill-orange' : 'skill-red';
+    return `<div class="skill-row">
+      <div class="skill-icon">${r.icon}</div>
+      <div class="skill-info">
+        <span class="skill-name">${t(r.labelKey)}</span>
+        <span class="skill-meta">${t('questionsAnswered')(b.total)} · ${fmtMsShort(b.timeMs / b.total)}</span>
+      </div>
+      <div class="skill-bar"><div class="skill-bar-inner ${cls}" style="width:${pct}%"></div></div>
+      <div class="skill-pct ${cls}">${pct}%</div>
+    </div>`;
+  }).join('');
+
+  const wrap = $('skills-tables-wrap');
+  const played = Object.keys(tables).length > 0;
+  wrap.style.display = played ? '' : 'none';
+  if (played) {
+    const perfected = loadStats().tablesPerfected;
+    $('skills-tables').innerHTML = Array.from({ length: 20 }, (_, i) => i + 1).map(n => {
+      const tb = tables[n];
+      const mastered = perfected.includes(n);
+      const cls = mastered ? ' mastered' : tb ? ' practiced' : '';
+      const sub = mastered ? '✓' : tb ? `${Math.round((tb.correct / tb.total) * 100)}%` : '·';
+      return `<div class="skill-table-chip${cls}" onclick="jumpToTable(${n})" role="button" tabindex="0"
+        onkeydown="if(event.key==='Enter')jumpToTable(${n})">
+        <span class="skill-table-num">${n}</span><span class="skill-table-sub">${sub}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+// Tap a table chip → pre-select that times-table on the home screen
+function jumpToTable(n) {
+  const btn = document.querySelector('#practice-toggle .practice-btn[data-type="times-table"]');
+  if (btn) selectPracticeType(btn);
+  const card = document.querySelector(`#times-grid .times-card[data-table="${n}"]`);
+  if (card) selectTimesTable(card);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ══════════════════════════════════════════
@@ -1402,6 +1695,9 @@ function generateTimesTableQuestion() {
 
 function equationKey(display, type) {
   if (display && display.kind === 'word') return `word:${display.op}:${display.a}:${display.b}`;
+  // Must precede the commutative fold below — "3 + ▢ = 8" is a different
+  // exercise than "3 + 5" even though a/op/b match
+  if (display && display.kind === 'missing') return `miss:${display.pos}:${display.a}${display.op}${display.b}`;
   if (type === 'clock') return `clock:${display.direction}:${display.h}:${display.m}`;
   if (type === 'geometry') return `geo:${display.kind}:${display.shape}:${display.countType || ''}:${JSON.stringify(display.dims || {})}`;
   if (type === 'conversions') return `${display.fromValue}${display.fromUnit}>${display.toUnit}`;
@@ -1477,6 +1773,8 @@ function applyLang() {
   renderStreak();
   renderMistakesButton();
   renderBadges();
+  renderProfileUI();
+  renderSkills();
 
   // Rebuild print config UI if open (it uses t() inline)
   const pcs = $('print-config-section');
@@ -1517,6 +1815,11 @@ document.addEventListener('click', e => {
     $('grade-menu').classList.remove('open');
     $('grade-btn').setAttribute('aria-expanded', 'false');
   }
+  if (!$('profile-picker').contains(e.target)) {
+    $('profile-menu').classList.remove('open');
+    $('profile-btn').setAttribute('aria-expanded', 'false');
+  }
+  if (e.target === $('profile-modal')) closeProfileModal();
 });
 
 // ══════════════════════════════════════════
@@ -1648,8 +1951,22 @@ function shuffle(arr) {
   return arr;
 }
 
+// Missing-number (open number sentence): hide one operand of a normal equation,
+// e.g. "7 + ▢ = 15" — the answer is the hidden operand
+function generateMissingQuestion() {
+  const inner = MATH_OPS[randInt(0, MATH_OPS.length - 1)];
+  const base  = generateQuestion(inner);
+  const pos   = Math.random() < 0.5 ? 'a' : 'b';
+  return {
+    display: { kind: 'missing', a: base.display.a, op: base.display.op, b: base.display.b, result: base.answer, pos },
+    answer: pos === 'a' ? base.display.a : base.display.b,
+    opUsed: inner,
+  };
+}
+
 function generateQuestion(op) {
   if (op === 'word') return generateWordQuestion();
+  if (op === 'missing') return generateMissingQuestion();
   if (op === 'mixed') op = MATH_OPS[randInt(0, MATH_OPS.length - 1)];
   const cfg = GRADE_CONFIG[selectedGrade];
   let a, b, answer, display;
@@ -1793,6 +2110,9 @@ function renderQuestion() {
     if (display.kind === 'word') {
       // The summary shows the underlying arithmetic; the story was the exercise
       renderQuestion._currentEquation = `📖 ${display.a} ${OP_SYMBOLS[display.op]} ${display.b}`;
+    } else if (display.kind === 'missing') {
+      renderQuestion._currentEquation =
+        `${display.pos === 'a' ? '▢' : display.a} ${display.op} ${display.pos === 'b' ? '▢' : display.b} = ${display.result}`;
     } else if (qType === 'clock') {
       renderQuestion._currentEquation = clockDir === 'a2d' ? '🕐 → ?' : `${fmtClock(q.answer)} → 🕐`;
     } else if (qType === 'geometry') {
@@ -1853,6 +2173,15 @@ function renderQuestion() {
     } else if (qType === 'conversions') {
       eqEl.className = 'q-equation q-equation-conversion';
       eqEl.innerHTML = `<span class="q-conv-val">${cvtFmt(display.fromValue)}</span><span class="q-conv-unit">${unitLabel(display.fromUnit, display.fromValue)}</span><span class="q-eq-op">=</span><span class="q-eq-box">?</span><span class="q-conv-unit">${unitLabel(display.toUnit, 2)}</span>`;
+    } else if (display.kind === 'missing') {
+      // ── Number sentence with the box at the hidden operand ──
+      eqEl.className = 'q-equation';
+      const box = '<span class="q-eq-box">?</span>';
+      eqEl.innerHTML =
+        (display.pos === 'a' ? box : `<span>${display.a}</span>`) +
+        `<span class="q-eq-op">${display.op}</span>` +
+        (display.pos === 'b' ? box : `<span>${display.b}</span>`) +
+        `<span class="q-eq-op">=</span><span>${display.result}</span>`;
     } else if (display.op === '+' || display.op === '−') {
       // ── Vertical (stacked) layout for addition / subtraction ──
       // For addition, put the larger number on top (a+b = b+a).
@@ -2032,9 +2361,12 @@ function handleAnswer(chosen, btnEl) {
   sessionScore+=qScore;
   sessionLog.push({equation:renderQuestion._currentEquation,correctAnswer:currentAnswer,chosen,wasCorrect,elapsedMs,score:qScore,maxQScore,fmt:logFmt,fracChoices:logFmt==='frac'?cq.display.fr:undefined});
 
+  let mistakeNote = '';
   if (cq) {
     if (!wasCorrect) addMistake(cq);
-    else if (practiceType === 'mistakes') removeMistake(cq.key);
+    else if (practiceType === 'mistakes') {
+      mistakeNote = ' ' + (creditMistake(cq.key) ? t('mistakeMastered') : t('mistakeOneMore'));
+    }
   }
   bumpStreak();
 
@@ -2047,7 +2379,7 @@ function handleAnswer(chosen, btnEl) {
     if(wasCorrect) {
       correct++; card.classList.add('correct');
       if(btnEl) btnEl.classList.add('correct-choice');
-      fb.textContent=t('correctFeedback'); fb.className='feedback correct show';
+      fb.textContent=t('correctFeedback')+mistakeNote; fb.className='feedback correct show';
     } else {
       wrong++; card.classList.add('wrong');
       if(btnEl) btnEl.classList.add('wrong-choice');
@@ -2064,7 +2396,7 @@ function handleAnswer(chosen, btnEl) {
     const disp=$('numpad-display');
     if(wasCorrect) {
       correct++; card.classList.add('correct'); disp.classList.add('numpad-correct');
-      fb.textContent=t('correctFeedback'); fb.className='feedback correct show';
+      fb.textContent=t('correctFeedback')+mistakeNote; fb.className='feedback correct show';
     } else {
       wrong++; card.classList.add('wrong'); disp.classList.add('numpad-wrong'); disp.textContent=fmtAnswer(cq,chosen);
       card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400);
@@ -2335,7 +2667,7 @@ function renderSummaryList(listEl,countEl,log) {
   listEl.innerHTML=log.map((e,i)=>`
     <div class="summary-row ${e.wasCorrect?'summary-correct':'summary-wrong'}">
       <span class="summary-num">${i+1}</span>
-      <span class="summary-eq">${e.equation} = ${logVal(e,e.correctAnswer)}</span>
+      <span class="summary-eq">${e.equation.includes('▢')?`${e.equation} · ▢ = ${logVal(e,e.correctAnswer)}`:`${e.equation} = ${logVal(e,e.correctAnswer)}`}</span>
       <span class="summary-chosen">${e.wasCorrect?`<span class="summary-icon">✓</span> ${logVal(e,e.chosen)}`:`<span class="summary-icon">✗</span> <s>${logVal(e,e.chosen)}</s>`}</span>
       <span class="summary-time">${fmtMsShort(e.elapsedMs)}</span>
       ${e.maxQScore!=null?`<span class="summary-score">${e.score}<span class="summary-score-max">/${e.maxQScore}</span></span>`:''}
@@ -2518,6 +2850,7 @@ function goHome() {
   renderStreak();
   renderMistakesButton();
   renderBadges();
+  renderSkills();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -2560,7 +2893,7 @@ function buildPrintConfigUI() {
     `<button class="practice-btn${printCfg.type===type?' active':''}" data-type="${type}" onclick="printSetType(this)">${type==='times-table'?t('timesTable'):t(type)}</button>`
   ).join('');
 
-  const opCards = ['addition','subtraction','multiplication','division','mixed','word'].map(op =>
+  const opCards = ['addition','subtraction','multiplication','division','missing','mixed','word'].map(op =>
     `<div class="op-card${printCfg.op===op?' active':''}" data-op="${op}" onclick="printSetOp(this)">
       <span class="op-symbol">${OP_SYMBOLS[op]}</span>
       <div class="op-name">${t(op)}</div>
@@ -2777,6 +3110,11 @@ function formatPrintEq(display, type) {
   if (display && display.kind === 'word') {
     return `<div class="print-word"><div class="print-word-text">${wordText(display)}</div><div class="print-word-blank">= __________</div></div>`;
   }
+  if (display && display.kind === 'missing') {
+    const aPart = display.pos === 'a' ? '_______' : display.a;
+    const bPart = display.pos === 'b' ? '_______' : display.b;
+    return `<span class="print-eq">${aPart} ${display.op} ${bPart} = ${display.result}</span>`;
+  }
   if (type === 'geometry') {
     const unit = display.kind === 'area' ? 'cm²' : display.kind === 'perimeter' ? 'cm' : '';
     const blank = display.kind === 'name' ? '__________' : `= ______ ${unit}`;
@@ -2909,3 +3247,12 @@ applyLang();
 selectGrade(selectedGrade);
 buildTimesTableGrid();
 renderHistory();
+
+// ══════════════════════════════════════════
+// SERVICE WORKER  (offline / installable — skipped for file:// dev)
+// ══════════════════════════════════════════
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
