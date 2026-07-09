@@ -75,13 +75,13 @@
 
     <div class="hero">
       <h1 data-i18n-html="heroTitle"></h1>
-      <p class="hero-tagline" data-i18n="heroTagline"></p>
-      <div class="grade-info" id="grade-info"></div>
-      <div class="streak-bar" id="streak-bar" style="display:none;">
-        <span class="streak-flame">🔥</span>
-        <span class="streak-days" id="streak-days"></span>
-        <div class="streak-progress"><div class="streak-progress-inner" id="streak-progress-inner"></div></div>
-        <span class="streak-today" id="streak-today"></span>
+      <div class="hero-meta">
+        <div class="grade-info" id="grade-info"></div>
+        <div class="streak-chip" id="streak-bar" style="display:none;">
+          <span class="streak-flame">🔥</span>
+          <span class="streak-days" id="streak-days"></span>
+          <span class="streak-today" id="streak-today"></span>
+        </div>
       </div>
     </div>
 
@@ -259,34 +259,57 @@
     </div>
 
     <!-- My skills -->
-    <div class="skills-section" id="skills-section" style="display:none;">
-      <div class="history-header">
-        <div class="section-label" style="margin-bottom:0;" data-i18n="mySkills"></div>
+    <div class="stats-fold" id="skills-section" style="display:none;">
+      <div class="stats-fold-head" role="button" tabindex="0" aria-expanded="false" aria-controls="skills-fold-body"
+           onclick="toggleFold('skills')"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFold('skills')}">
+        <span class="fold-icon">📊</span>
+        <span class="section-label fold-label" data-i18n="mySkills"></span>
+        <span class="fold-stat" id="skills-fold-stat"></span>
+        <span class="fold-chevron">›</span>
       </div>
-      <div class="skills-list" id="skills-list"></div>
-      <div class="skills-tables-wrap" id="skills-tables-wrap" style="display:none;">
-        <div class="skills-tables-label" data-i18n="timesTable"></div>
-        <div class="skills-tables" id="skills-tables"></div>
+      <div class="stats-fold-body" id="skills-fold-body" hidden>
+        <div class="skills-list" id="skills-list"></div>
+        <div class="skills-tables-wrap" id="skills-tables-wrap" style="display:none;">
+          <div class="skills-tables-label" data-i18n="timesTable"></div>
+          <div class="skills-tables" id="skills-tables"></div>
+        </div>
       </div>
     </div>
 
     <!-- Badges -->
-    <div class="badges-section" id="badges-section">
-      <div class="history-header">
-        <div class="section-label" style="margin-bottom:0;" data-i18n="badges"></div>
-        <span class="badges-count" id="badges-count"></span>
+    <div class="stats-fold" id="badges-section">
+      <div class="stats-fold-head" role="button" tabindex="0" aria-expanded="false" aria-controls="badges-fold-body"
+           onclick="toggleFold('badges')"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFold('badges')}">
+        <span class="fold-icon">🏅</span>
+        <span class="section-label fold-label" data-i18n="badges"></span>
+        <span class="fold-stat badges-count" id="badges-count"></span>
+        <span class="fold-chevron">›</span>
       </div>
-      <div class="badges-grid" id="badges-grid"></div>
+      <div class="stats-fold-body" id="badges-fold-body" hidden>
+        <div class="badges-grid" id="badges-grid"></div>
+        <div class="badges-more" id="badges-more"></div>
+      </div>
     </div>
 
     <!-- Session history -->
-    <div id="history-section" style="display:none;">
-      <div class="history-header">
-        <div class="section-label" style="margin-bottom:0;" data-i18n="sessionHistory"></div>
-        <button class="btn-clear-history" onclick="clearHistory()" data-i18n="clearAll"></button>
+    <div class="stats-fold" id="history-section" style="display:none;">
+      <div class="stats-fold-head" role="button" tabindex="0" aria-expanded="false" aria-controls="history-fold-body"
+           onclick="toggleFold('history')"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFold('history')}">
+        <span class="fold-icon">📜</span>
+        <span class="section-label fold-label" data-i18n="sessionHistory"></span>
+        <span class="fold-stat" id="history-fold-stat"></span>
+        <span class="fold-chevron">›</span>
       </div>
-      <div class="history-list" id="history-list"></div>
-      <div class="history-more" id="history-more"></div>
+      <div class="stats-fold-body" id="history-fold-body" hidden>
+        <div class="history-list" id="history-list"></div>
+        <div class="history-more" id="history-more"></div>
+        <div class="history-clear-row">
+          <button class="btn-clear-history" onclick="clearHistory()" data-i18n="clearAll"></button>
+        </div>
+      </div>
     </div>
 
   </div><!-- /#home-section -->

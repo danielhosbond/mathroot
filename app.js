@@ -196,15 +196,18 @@ const TRANSLATIONS = {
     pageTitle: 'MathRoot — Math Trainer',
     // Hero
     heroTitle: 'Train your <span>math skills.</span><span class="cursor"></span>',
-    heroTagline: 'Pick an operation, choose how many questions, and beat your score.',
     // Home sections
     chooseOperation: 'Choose operation',
     numberOfQuestions: 'Number of questions',
     inputMode: 'Input mode',
     sessionHistory: 'Session history',
     clearAll: 'Clear all',
+    clearHistoryConfirm: 'Delete all session history? This cannot be undone.',
     showAll: (n) => `Show all (${n})`,
     showLess: 'Show less',
+    sessionsCount: (n) => n === 1 ? '1 session' : `${n} sessions`,
+    showLocked: (n) => `Show locked (${n})`,
+    hideLocked: 'Hide locked',
     startTraining: 'Start Training →',
     // Operations
     addition: 'Addition',
@@ -409,14 +412,17 @@ const TRANSLATIONS = {
   da: {
     pageTitle: 'MathRoot — Matematiktræner',
     heroTitle: 'Træn din <span>matematik.</span><span class="cursor"></span>',
-    heroTagline: 'Vælg en regningsart, antal spørgsmål og slå din rekord.',
     chooseOperation: 'Vælg regningsart',
     numberOfQuestions: 'Antal spørgsmål',
     inputMode: 'Inputtilstand',
     sessionHistory: 'Sessionshistorik',
     clearAll: 'Ryd alle',
+    clearHistoryConfirm: 'Slet al sessionshistorik? Dette kan ikke fortrydes.',
     showAll: (n) => `Vis alle (${n})`,
     showLess: 'Vis færre',
+    sessionsCount: (n) => n === 1 ? '1 session' : `${n} sessioner`,
+    showLocked: (n) => `Vis låste (${n})`,
+    hideLocked: 'Skjul låste',
     startTraining: 'Start træning →',
     addition: 'Addition',
     subtraction: 'Subtraktion',
@@ -1285,7 +1291,27 @@ function renderStreak() {
   el.style.display = '';
   $('streak-days').textContent  = t('streakDays')(st.current);
   $('streak-today').textContent = t('todayProgress')(st.todayCount, DAILY_GOAL);
-  $('streak-progress-inner').style.width = `${Math.min(100, (st.todayCount / DAILY_GOAL) * 100)}%`;
+}
+
+// ══════════════════════════════════════════
+// STATS FOLDS  (collapsible skills/badges/history sections)
+// ══════════════════════════════════════════
+// Device-level UI preference like theme/lang — deliberately not profile-scoped
+let foldState = { skills: false, badges: false, history: false,
+                  ...store.get('mathroot-sections', {}) }; // merge tolerates corrupt/legacy values
+
+function applyFoldState(name) {
+  const sec = $(name + '-section');
+  if (!sec) return;
+  const open = !!foldState[name];
+  sec.classList.toggle('open', open);
+  sec.querySelector('.stats-fold-head').setAttribute('aria-expanded', String(open));
+  sec.querySelector('.stats-fold-body').hidden = !open;
+}
+function toggleFold(name) {
+  foldState[name] = !foldState[name];
+  store.set('mathroot-sections', foldState);
+  applyFoldState(name);
 }
 
 // ══════════════════════════════════════════
@@ -1566,12 +1592,19 @@ function recordSessionAndAwardBadges(session) {
   return newly;
 }
 
+let badgesShowLocked = false; // session-local; collapsed-by-default already handles compaction
+function toggleLockedBadges() { badgesShowLocked = !badgesShowLocked; renderBadges(); }
+
 function renderBadges() {
   const grid = $('badges-grid');
   if (!grid) return;
   const earned = loadBadges().earned;
-  $('badges-count').textContent = `${BADGES.filter(b => earned[b.id]).length}/${BADGES.length}`;
-  grid.innerHTML = BADGES.map(b => {
+  const earnedList = BADGES.filter(b => earned[b.id]).sort((a, b) => earned[a.id] - earned[b.id]);
+  const lockedList = BADGES.filter(b => !earned[b.id]);
+  $('badges-count').textContent = `${earnedList.length}/${BADGES.length}`;
+  // With nothing earned yet, the locked list IS the goal display — show it without the toggle
+  const showLocked = badgesShowLocked || earnedList.length === 0;
+  const chip = (b) => {
     const ts = earned[b.id];
     return `<div class="badge-chip${ts ? '' : ' badge-locked'}" title="${t(b.descKey)}">
       <span class="badge-icon">${b.icon}</span>
@@ -1580,7 +1613,12 @@ function renderBadges() {
         <div class="badge-sub">${ts ? fmtDate(ts) : t(b.descKey)}</div>
       </div>
     </div>`;
-  }).join('');
+  };
+  grid.innerHTML = (showLocked ? [...earnedList, ...lockedList] : earnedList).map(chip).join('');
+  $('badges-more').innerHTML = (lockedList.length && earnedList.length)
+    ? `<button class="btn-history-toggle" onclick="toggleLockedBadges()">${badgesShowLocked ? t('hideLocked') : t('showLocked')(lockedList.length)}</button>`
+    : '';
+  applyFoldState('badges');
 }
 
 // ══════════════════════════════════════════
@@ -1650,6 +1688,8 @@ function renderSkills() {
   const rows = SKILL_ROWS.filter(r => buckets[r.key] && buckets[r.key].total > 0);
   if (rows.length === 0) { sec.style.display = 'none'; return; }
   sec.style.display = '';
+  const agg = rows.reduce((a, r) => { const b = buckets[r.key]; a.c += b.correct; a.t += b.total; return a; }, { c: 0, t: 0 });
+  $('skills-fold-stat').textContent = `${Math.round((agg.c / agg.t) * 100)}%`;
 
   $('skills-list').innerHTML = rows.map(r => {
     const b = buckets[r.key];
@@ -1682,6 +1722,7 @@ function renderSkills() {
       </div>`;
     }).join('');
   }
+  applyFoldState('skills');
 }
 
 // Tap a table chip → pre-select that times-table on the home screen
@@ -2916,6 +2957,8 @@ function toggleHistoryExpanded() { historyExpanded = !historyExpanded; renderHis
 function renderHistory() {
   if(allSessions.length===0){$('history-section').style.display='none';return;}
   $('history-section').style.display='';
+  $('history-fold-stat').textContent = t('sessionsCount')(allSessions.length);
+  applyFoldState('history');
   // Collapsed view shows the newest-first prefix, so map indices still match allSessions
   const visible = historyExpanded ? allSessions : allSessions.slice(0, HISTORY_COLLAPSED_COUNT);
   $('history-list').innerHTML=visible.map((s,i)=>{
@@ -2966,7 +3009,10 @@ function renderHistory() {
       : '';
   }
 }
-function clearHistory(){allSessions=[];historyExpanded=false;saveSessions();renderHistory();}
+function clearHistory(){
+  if (!confirm(t('clearHistoryConfirm'))) return;
+  allSessions=[];historyExpanded=false;saveSessions();renderHistory();
+}
 
 // ══════════════════════════════════════════
 // SESSION DETAIL

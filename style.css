@@ -192,10 +192,10 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 /* ══════════════════════════════════════════
    HERO
 ══════════════════════════════════════════ */
-.hero { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 20px 0 48px; }
-.hero h1 { font-size: clamp(1.6rem,5vw,3.4rem); font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 14px; white-space: nowrap; }
+.hero { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 14px 0 22px; gap: 10px; }
+.hero h1 { font-size: clamp(1.15rem, 3.6vw, 1.5rem); font-weight: 800; letter-spacing: -.5px; line-height: 1.1; margin-bottom: 0; white-space: nowrap; }
 .hero h1 span { color: var(--orange-light); }
-.hero-tagline { color: var(--muted); font-size: clamp(.7rem, 2.6vw, 1.05rem); margin-bottom: 20px; line-height: 1.6; white-space: nowrap; }
+.hero-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
 
 .grade-info { display: flex; justify-content: center; }
 .grade-pills { display: inline-flex; flex-wrap: nowrap; justify-content: center; gap: 8px; }
@@ -211,33 +211,18 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 /* ══════════════════════════════════════════
    STREAK BAR
 ══════════════════════════════════════════ */
-.streak-bar {
-  display: flex; align-items: center; gap: 10px;
-  margin-top: 16px; padding: 8px 14px;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+.streak-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px;
 }
 .streak-flame { font-size: 1rem; }
 .streak-days  { font-family: 'Space Mono', monospace; font-size: .72rem; font-weight: 700; color: var(--orange-light); white-space: nowrap; }
-.streak-progress {
-  width: 90px; height: 6px; border-radius: 3px; overflow: hidden;
-  background: var(--surface2); border: 1px solid var(--border);
-}
-.streak-progress-inner {
-  height: 100%; width: 0; border-radius: 3px;
-  background: linear-gradient(90deg, var(--orange), var(--orange-light));
-  transition: width .3s ease;
-}
 .streak-today { font-family: 'Space Mono', monospace; font-size: .65rem; color: var(--muted); white-space: nowrap; }
 
 /* ══════════════════════════════════════════
    BADGES
 ══════════════════════════════════════════ */
-.badges-section { margin-top: 44px; }
-.badges-count {
-  font-family: 'Space Mono', monospace; font-size: .7rem; font-weight: 700;
-  color: var(--muted); letter-spacing: 1px;
-}
-.badges-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+.badges-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .badge-chip {
   display: flex; align-items: center; gap: 10px; padding: 10px 12px;
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
@@ -455,7 +440,31 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 /* ══════════════════════════════════════════
    SESSION HISTORY
 ══════════════════════════════════════════ */
-.history-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+/* ══════════════════════════════════════════
+   STATS FOLDS  (collapsible skills/badges/history)
+══════════════════════════════════════════ */
+.stats-fold { margin-top: 18px; }
+#skills-section.stats-fold { margin-top: 44px; } /* breathing room after the print row */
+.stats-fold-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; cursor: pointer; user-select: none; outline: none;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  transition: border-color .2s;
+}
+.stats-fold-head:hover         { border-color: var(--orange); }
+.stats-fold-head:focus-visible { border-color: var(--orange-light); }
+.fold-icon  { font-size: 1rem; }
+.fold-label { margin-bottom: 0; flex: 1; } /* .section-label supplies the type + dash */
+.fold-stat {
+  font-family: 'Space Mono', monospace; font-size: .72rem; font-weight: 700;
+  color: var(--orange-light); white-space: nowrap; letter-spacing: 1px;
+}
+.fold-chevron { font-size: 1.2rem; color: var(--muted); transition: transform .2s, color .2s; }
+.stats-fold.open .fold-chevron       { transform: rotate(90deg); }
+.stats-fold-head:hover .fold-chevron { color: var(--orange-light); }
+.stats-fold-body { margin-top: 12px; animation: fadeDown .2s ease both; } /* fadeDown replays on hidden→shown */
+.badges-more       { text-align: center; margin-top: 10px; }
+.history-clear-row { display: flex; justify-content: flex-end; margin-top: 12px; }
 .btn-clear-history {
   font-family: 'Space Mono', monospace; font-size: .65rem; color: var(--muted);
   background: transparent; border: 1px solid var(--border); border-radius: 6px;
@@ -981,9 +990,10 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   .grade-chevron { font-size: .55rem; }
 
   /* ── Hero ── */
-  .hero { padding: 14px 0 36px; }
-  .hero h1 { font-size: clamp(1.3rem,4.8vw,3.4rem); }
-  .hero-tagline { font-size: clamp(.6rem,2.4vw,1.05rem); }
+  .hero { padding: 10px 0 16px; }
+  .hero h1 { font-size: clamp(1.05rem, 4.2vw, 1.3rem); }
+  .stats-fold-head { padding: 10px 12px; }
+  .fold-stat { font-size: .65rem; }
 
   .picker-zone { min-height: 160px; }
   .practice-toggle { flex-wrap: wrap; gap: 4px; }
@@ -1278,7 +1288,6 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 /* ══════════════════════════════════════════
    MY SKILLS
 ══════════════════════════════════════════ */
-.skills-section { margin-top: 48px; }
 
 .skill-row {
   display: flex; align-items: center; gap: 12px;
