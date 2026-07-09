@@ -344,6 +344,12 @@ const TRANSLATIONS = {
     // Mistakes
     practiceMistakes: (n) => `Practice mistakes (${n})`,
     mistakesPractice: 'Mistake practice',
+    // Daily Mix
+    dailyMix: 'Daily Mix',
+    dailyMixSub: (n) => `Your ${n} questions for today`,
+    dailyMixStart: 'Start',
+    dailyMixDone: 'Done for today!',
+    dailyMixAgain: 'Play again',
     mistakeOneMore: 'One more to master it!',
     mistakeMastered: 'Mastered! 🎉',
     // Skills
@@ -538,6 +544,12 @@ const TRANSLATIONS = {
     // Mistakes
     practiceMistakes: (n) => `Øv dine fejl (${n})`,
     mistakesPractice: 'Fejltræning',
+    // Daily Mix
+    dailyMix: 'Dagens mix',
+    dailyMixSub: (n) => `Dine ${n} opgaver til i dag`,
+    dailyMixStart: 'Start',
+    dailyMixDone: 'Klaret for i dag!',
+    dailyMixAgain: 'Spil igen',
     mistakeOneMore: 'Én mere, så er den mestret!',
     mistakeMastered: 'Mestret! 🎉',
     // Skills
@@ -1356,6 +1368,141 @@ function startMistakesQuiz() {
 }
 
 // ══════════════════════════════════════════
+// DAILY MIX
+// One-tap session of DAILY_GOAL questions interleaving mistake-bank items,
+// skills due for review (spacing), and fresh material at the current grade.
+// ══════════════════════════════════════════
+const MIX_MISTAKES_MAX = 5;
+
+// A queue session replays a prebuilt list of self-describing items instead of generating live
+function isQueueSession() { return practiceType === 'mistakes' || practiceType === 'mix'; }
+
+function dailyMixDoneToday() {
+  const today = localDateStr();
+  return allSessions.some(s => s.practiceType === 'mix' && !s.cancelled
+    && localDateStr(new Date(s.timestamp)) === today);
+}
+
+// Skill keys the scheduler can pick from at the current grade
+function mixAvailableSkills() {
+  const skills = ['addition', 'subtraction', 'multiplication', 'division', 'missing',
+                  'times-table', 'clock', 'conversions', 'geometry'];
+  if (selectedGrade <= 4) skills.push('word');      // word problems clamp to grade ≤4
+  if (selectedGrade >= 3) skills.push('fractions'); // FRACTION_CATEGORIES minGrade 3
+  return skills;
+}
+
+// skill key -> timestamp of the most recent session that practiced it
+function skillLastPracticed() {
+  const last = {};
+  const mark = (k, ts) => { if (k && (!last[k] || ts > last[k])) last[k] = ts; };
+  for (const s of allSessions) {
+    if (s.practiceType === 'mistakes') continue;
+    if (s.practiceType === 'mix') { for (const e of s.log || []) mark(e.skill, s.timestamp); }
+    else if (!s.practiceType || s.practiceType === 'math') {
+      if (s.op === 'mixed') for (const e of s.log || [])
+        mark(MIXED_SYMBOL_OPS[(String(e.equation).match(/[+−×÷]/) || [])[0]], s.timestamp);
+      else mark(s.op, s.timestamp);
+    } else mark(s.practiceType, s.timestamp);
+  }
+  return last;
+}
+
+// Spacing + weakness: stale and low-accuracy skills float up; unseen skills get a "try me" score
+function mixSkillPriority(skill, buckets, last) {
+  if (!last[skill]) return 5 + Math.random() * 2;
+  const days = Math.min((Date.now() - last[skill]) / 86400000, 14);
+  const b = buckets[skill];
+  const err = b && b.total >= 5 ? 1 - b.correct / b.total : 0.3; // thin data → mild boost
+  return days + err * 10 + Math.random() * 2;
+}
+
+// Generate one fresh queue item for a skill; item is self-describing like a mistake-bank entry
+function generateMixItem(skill) {
+  let q, ptype = 'math', category = null, table;
+  if (skill === 'times-table') {
+    ptype = 'times-table';
+    const { tables } = computeSkillStats();
+    const played = Object.keys(tables).map(Number);
+    const weakest = played.sort((a, b) =>
+      tables[a].correct / tables[a].total - tables[b].correct / tables[b].total)[0];
+    table = weakest || randInt(2, 10);
+    const prev = selectedTable; selectedTable = table;
+    q = generateTimesTableQuestion(); selectedTable = prev;
+  } else if (skill === 'clock') {
+    ptype = 'clock';
+    const prev = selectedClockDir; selectedClockDir = 'mixed'; // generator forces a2d in input mode
+    q = generateClockQuestion(); selectedClockDir = prev;
+  } else if (skill === 'conversions') {
+    ptype = 'conversions';
+    const cats = CONV_CATEGORIES.filter(c => CONVERSION_PAIRS[c.key].some(p => p.minGrade <= selectedGrade));
+    category = cats[randInt(0, cats.length - 1)].key;
+    q = generateConversionQuestion(category);
+  } else if (skill === 'geometry') {
+    ptype = 'geometry';
+    const cats = GEO_CATEGORIES.filter(c => c.minGrade <= selectedGrade);
+    category = cats[randInt(0, cats.length - 1)].key;
+    q = generateGeometryQuestion(category);
+  } else if (skill === 'fractions') {
+    ptype = 'fractions';
+    const cats = FRACTION_CATEGORIES.filter(c => c.minGrade <= selectedGrade);
+    category = cats[randInt(0, cats.length - 1)].key;
+    q = generateFractionsQuestion(category);
+  } else {
+    q = generateQuestion(skill); // addition/…/missing/word/mixed
+  }
+  return { key: equationKey(q.display, ptype), display: q.display, answer: q.answer,
+           practiceType: ptype, opUsed: q.opUsed || null, category,
+           grade: selectedGrade, table };
+}
+
+function buildDailyMixQueue() {
+  const used = new Set(); const queue = [];
+  // (a) mistake-bank remediation — highest-priority items first
+  [...loadMistakes()].sort((a, b) => mistakePriority(b) - mistakePriority(a))
+    .slice(0, MIX_MISTAKES_MAX)
+    .forEach(m => { used.add(m.key); queue.push({ ...m, fromMistakes: true }); });
+  // (b) the 3 most due skills share ~60% of the remainder
+  const remaining = DAILY_GOAL - queue.length;
+  const { buckets } = computeSkillStats();
+  const last = skillLastPracticed();
+  const due = mixAvailableSkills()
+    .sort((a, b) => mixSkillPriority(b, buckets, last) - mixSkillPriority(a, buckets, last))
+    .slice(0, 3);
+  const add = (skill) => {
+    let item;
+    for (let i = 0; i < 8; i++) {
+      item = generateMixItem(skill);
+      if (!used.has(item.key)) break; // like renderQuestion, accept a repeat after 8 tries
+    }
+    used.add(item.key); queue.push(item);
+  };
+  const reviewCount = Math.round(remaining * 0.6);
+  for (let i = 0; i < reviewCount; i++) add(due[i % due.length]);
+  // (c) fresh mixed arithmetic fills the rest (also absorbs dedup shortfalls)
+  while (queue.length < DAILY_GOAL) add('mixed');
+  return shuffle(queue); // interleaving
+}
+
+function startDailyMix() {
+  mistakesQueue = buildDailyMixQueue();
+  practiceType  = 'mix';
+  totalQ        = mistakesQueue.length;
+  sprintMode    = false; // fixed queue — goHome restores sprint from the UI
+  startQuiz();
+}
+
+function renderDailyMixCard() {
+  const card = $('daily-mix-card');
+  if (!card) return;
+  const done = dailyMixDoneToday();
+  card.classList.toggle('done', done);
+  $('daily-mix-title').textContent = (done ? '✓ ' : '') + t('dailyMix');
+  $('daily-mix-sub').textContent   = done ? t('dailyMixDone') : t('dailyMixSub')(DAILY_GOAL);
+  $('daily-mix-btn').textContent   = done ? t('dailyMixAgain') : t('dailyMixStart');
+}
+
+// ══════════════════════════════════════════
 // LIFETIME STATS & BADGES
 // ══════════════════════════════════════════
 function loadStats() {
@@ -1464,6 +1611,18 @@ function computeSkillStats() {
   for (const s of allSessions) {
     // Mistake sessions mix skills and their log lines don't carry a type — skip
     if (s.practiceType === 'mistakes') continue;
+    // Daily Mix sessions tag each log line with its skill (and table for times-table items)
+    if (s.practiceType === 'mix') {
+      for (const e of s.log || []) {
+        if (!e.skill) continue;
+        bump(e.skill, e);
+        if (e.skill === 'times-table' && e.table) {
+          const tb = tables[e.table] ?? (tables[e.table] = { correct: 0, total: 0 });
+          tb.total++; if (e.wasCorrect) tb.correct++;
+        }
+      }
+      continue;
+    }
     for (const e of s.log || []) {
       let key;
       if (s.practiceType === 'times-table') {
@@ -1794,6 +1953,7 @@ function applyLang() {
   renderHistory();
   renderStreak();
   renderMistakesButton();
+  renderDailyMixCard();
   renderBadges();
   renderProfileUI();
   renderSkills();
@@ -2119,8 +2279,8 @@ function renderQuestion() {
 
     // ── Generate new question ────────────────────────────────────────────
     let q, eqKey, qType;
-    if (practiceType === 'mistakes') {
-      // Mistakes sessions replay stored questions instead of generating new ones
+    if (isQueueSession()) {
+      // Mistakes and Daily Mix sessions replay prebuilt queue items instead of generating live
       q = mistakesQueue[currentQ];
       eqKey = q.key;
       qType = q.practiceType;
@@ -2151,7 +2311,7 @@ function renderQuestion() {
     // A clock face can't be typed — replayed d2a mistakes render as a2d in input mode
     const clockDir = qType === 'clock' && selectedMode === 'input' ? 'a2d' : display.direction;
 
-    renderQuestion._currentQ = practiceType === 'mistakes' ? q : {
+    renderQuestion._currentQ = isQueueSession() ? q : {
       key: eqKey,
       display,
       answer: q.answer,
@@ -2405,9 +2565,9 @@ function handleAnswer(chosen, btnEl) {
   const elapsedMs=Date.now()-questionStartTime;
   const wasCorrect=Math.abs(Number(chosen)-currentAnswer)<0.005;
   const cq = renderQuestion._currentQ;
-  // Mistakes sessions mix questions from different grades/types — score each by its origin
-  const qGrade    = practiceType === 'mistakes' && cq ? (cq.grade || selectedGrade) : selectedGrade;
-  const scoreType = practiceType === 'mistakes' && cq ? cq.practiceType : practiceType;
+  // Queue sessions mix questions from different grades/types — score each by its origin
+  const qGrade    = isQueueSession() && cq ? (cq.grade || selectedGrade) : selectedGrade;
+  const scoreType = isQueueSession() && cq ? cq.practiceType : practiceType;
   const qScore=calcQuestionScore(selectedMode,qGrade,elapsedMs,wasCorrect,scoreType);
   const maxQScore=qGrade*10*2;
   const logFmt = cq && cq.practiceType === 'clock' ? 'clock'
@@ -2416,12 +2576,21 @@ function handleAnswer(chosen, btnEl) {
     : undefined;
   const answerLabel = fmtAnswer(cq, currentAnswer);
   sessionScore+=qScore;
-  sessionLog.push({equation:renderQuestion._currentEquation,correctAnswer:currentAnswer,chosen,wasCorrect,elapsedMs,score:qScore,maxQScore,fmt:logFmt,fracChoices:logFmt==='frac'?cq.display.fr:undefined});
+  // Mix sessions interleave skills — tag each log line so skill stats and the scheduler see it
+  let skill, skillTable;
+  if (isQueueSession() && cq) {
+    const pt = cq.practiceType;
+    skill = (!pt || pt === 'math')
+      ? (cq.display.kind === 'word' ? 'word' : cq.display.kind === 'missing' ? 'missing' : cq.opUsed)
+      : pt;
+    if (pt === 'times-table') skillTable = cq.table;
+  }
+  sessionLog.push({equation:renderQuestion._currentEquation,correctAnswer:currentAnswer,chosen,wasCorrect,elapsedMs,score:qScore,maxQScore,fmt:logFmt,fracChoices:logFmt==='frac'?cq.display.fr:undefined,skill,table:skillTable});
 
   let mistakeNote = '';
   if (cq) {
     if (!wasCorrect) addMistake(cq);
-    else if (practiceType === 'mistakes') {
+    else if (practiceType === 'mistakes' || (practiceType === 'mix' && cq.fromMistakes)) {
       mistakeNote = ' ' + (creditMistake(cq.key) ? t('mistakeMastered') : t('mistakeOneMore'));
     }
   }
@@ -2629,15 +2798,15 @@ function showResults(cancelled) {
   const answeredCount=sessionLog.length;
   const pct=answeredCount>0?Math.round((correct/answeredCount)*100):0;
   const avgMs=answeredCount>0?sessionLog.reduce((s,e)=>s+e.elapsedMs,0)/answeredCount:0;
-  // Mistakes sessions mix grades, so personal bests aren't comparable — skip PB tracking
-  const isMistakes = practiceType === 'mistakes';
-  const isSprint = sprintMode; // startMistakesQuiz forces sprintMode off, so this is authoritative
-  const maxScore = isMistakes
+  // Queue sessions (mistakes, mix) span grades/types, so personal bests aren't comparable — skip PB tracking
+  const isQueue = isQueueSession();
+  const isSprint = sprintMode; // queue-session starters force sprintMode off, so this is authoritative
+  const maxScore = isQueue
     ? mistakesQueue.reduce((s, q) => s + (q.grade || selectedGrade) * 10 * 2, 0)
     : isSprint
       ? calcMaxScore(selectedMode,selectedGrade,answeredCount)
       : calcMaxScore(selectedMode,selectedGrade,totalQ);
-  const opKey = isMistakes ? 'mistakes'
+  const opKey = isQueue ? practiceType
     : practiceType === 'times-table' ? `times-table-${selectedTable}`
     : practiceType === 'clock' ? `clock-${selectedClockDir}`
     : practiceType === 'geometry' ? `geometry-${selectedGeoCat}`
@@ -2646,8 +2815,8 @@ function showResults(cancelled) {
   // Sprint PBs count correct answers (not points) and live under their own duration-scoped key
   const pbOpKey = isSprint ? `sprint-${sprintDuration}-${opKey}` : opKey;
   const pbValue = isSprint ? correct : sessionScore;
-  const pb = isMistakes ? 0 : getPersonalBest(pbOpKey,selectedGrade,selectedMode);
-  const isNewPb = !isMistakes && !cancelled && pbValue>pb;
+  const pb = isQueue ? 0 : getPersonalBest(pbOpKey,selectedGrade,selectedMode);
+  const isNewPb = !isQueue && !cancelled && pbValue>pb;
   if(isNewPb) setPersonalBest(pbOpKey,selectedGrade,selectedMode,pbValue);
 
   const sessionCategory = practiceType === 'geometry' ? selectedGeoCat : practiceType === 'fractions' ? selectedFracCat : selectedCategory;
@@ -2764,6 +2933,8 @@ function renderHistory() {
     } else if (s.practiceType==='fractions') {
       const cat=FRACTION_CATEGORIES.find(c=>c.key===s.category);
       sym=cat?cat.icon:'½'; opLabel=cat?t(cat.labelKey):t('fractions');
+    } else if (s.practiceType==='mix') {
+      sym='🎯'; opLabel=t('dailyMix');
     } else if (s.practiceType==='mistakes') {
       sym='⟳'; opLabel=t('mistakesPractice');
     } else {
@@ -2813,9 +2984,11 @@ function openDetail(index) {
           ? t((GEO_CATEGORIES.find(c=>c.key===s.category)||{}).labelKey||'geometry')
           : s.practiceType==='fractions'
             ? t((FRACTION_CATEGORIES.find(c=>c.key===s.category)||{}).labelKey||'fractions')
-            : s.practiceType==='mistakes'
-              ? t('mistakesPractice')
-              : t(OP_META_KEYS[s.op]||s.op);
+            : s.practiceType==='mix'
+              ? t('dailyMix')
+              : s.practiceType==='mistakes'
+                ? t('mistakesPractice')
+                : t(OP_META_KEYS[s.op]||s.op);
   const modeLabel=t(MODE_KEYS[s.mode]||s.mode);
   const gradeLabel=TRANSLATIONS[currentLang].gradeLabel(s.grade);
 
@@ -2862,6 +3035,7 @@ function replaySession() {
   goHome();
   setTimeout(() => {
     if (snap.type === 'mistakes') { startMistakesQuiz(); return; }
+    if (snap.type === 'mix')      { startDailyMix(); return; } // fresh queue each replay — a mix is a daily prescription, not a fixed set
     // Re-select through the card element so the home UI stays in sync if the kid stops early
     const reselect = (selector, fn) => { const el = document.querySelector(selector); if (el) fn(el); };
     if (snap.type === 'math')             reselect(`.op-card[data-op="${snap.op}"]`, selectOp);
@@ -2881,13 +3055,13 @@ function goHome() {
     const answeredCount = sessionLog.length;
     const pct = answeredCount > 0 ? Math.round((correct / answeredCount) * 100) : 0;
     const avgMs = answeredCount > 0 ? sessionLog.reduce((s, e) => s + e.elapsedMs, 0) / answeredCount : 0;
-    const opKey = practiceType === 'mistakes' ? 'mistakes'
+    const opKey = isQueueSession() ? practiceType
       : practiceType === 'times-table' ? `times-table-${selectedTable}`
       : practiceType === 'clock' ? `clock-${selectedClockDir}`
       : practiceType === 'geometry' ? `geometry-${selectedGeoCat}`
       : practiceType === 'fractions' ? `fractions-${selectedFracCat}`
       : selectedOp;
-    const maxScore = practiceType === 'mistakes'
+    const maxScore = isQueueSession()
       ? mistakesQueue.reduce((s, q) => s + (q.grade || selectedGrade) * 10 * 2, 0)
       : calcMaxScore(selectedMode, selectedGrade, sprintMode ? answeredCount : totalQ);
     const sessionCategory = practiceType === 'geometry' ? selectedGeoCat : practiceType === 'fractions' ? selectedFracCat : selectedCategory;
@@ -2898,7 +3072,7 @@ function goHome() {
     sessionLog = [];
   }
   stopSessionClock();
-  // A mistakes session overrides practiceType, totalQ and sprintMode — restore them from the home-screen UI
+  // A mistakes/mix session overrides practiceType, totalQ and sprintMode — restore them from the home-screen UI
   practiceType = document.querySelector('.practice-btn.active')?.dataset.type || 'math';
   const activeCount = document.querySelector('.count-card.active')?.dataset.count || '10';
   sprintMode = activeCount === 'sprint';
@@ -2915,6 +3089,7 @@ function goHome() {
   renderHistory();
   renderStreak();
   renderMistakesButton();
+  renderDailyMixCard();
   renderBadges();
   renderSkills();
   window.scrollTo({top:0,behavior:'smooth'});
