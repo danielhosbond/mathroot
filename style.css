@@ -328,10 +328,13 @@ header { display: flex; align-items: center; justify-content: space-between; pad
    OPERATION GRID
 ══════════════════════════════════════════ */
 .picker-zone { min-height: 240px; }
-.op-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 48px; }
-.op-card { padding: 22px 18px; }
-.op-symbol { font-size: 2rem; font-weight: 800; color: var(--orange-light); margin-bottom: 8px; display: block; font-family: 'Space Mono', monospace; }
-.op-name   { font-size: .85rem; font-weight: 600; color: var(--muted); letter-spacing: .5px; }
+.op-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 48px; }
+/* Below 780px the 5-col tracks get too narrow for the longest labels ("Missing number",
+   "Add & subtract") — they'd wrap and stretch their row taller than the other pickers */
+@media (max-width: 780px) { .op-grid { grid-template-columns: repeat(3,1fr); } }
+.op-card { padding: 18px 10px; }
+.op-symbol { font-size: 1.3rem; font-weight: 800; color: var(--orange-light); margin-bottom: 8px; display: block; font-family: 'Space Mono', monospace; }
+.op-name   { font-size: .8rem; font-weight: 600; color: var(--muted); }
 
 /* ══════════════════════════════════════════
    PRACTICE TYPE TOGGLE
@@ -355,9 +358,7 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 /* ══════════════════════════════════════════
    CONVERSION CATEGORY GRID
 ══════════════════════════════════════════ */
-.conv-grid { grid-template-columns: repeat(5, 1fr); margin-bottom: 48px; }
-.conv-cat-card { padding: 18px 10px; }
-.conv-cat-icon { font-size: 1.3rem; }
+/* Category cards share .op-card/.op-symbol sizing — all pickers render at one tile size */
 .conv-cat-disabled { opacity: .3; cursor: not-allowed; pointer-events: none; }
 /* ══════════════════════════════════════════
    TIMES TABLE GRID
@@ -378,11 +379,6 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .times-card:hover::before { opacity: 1; }
 .times-card.active   { border-color: var(--orange-light); box-shadow: 0 0 28px var(--orange-glow); background: var(--surface2); color: var(--orange-light); }
 .times-card.active::before { opacity: 1; }
-
-
-@media (max-width: 480px) {
-  .conv-grid { grid-template-columns: repeat(3, 1fr); }
-}
 
 /* ══════════════════════════════════════════
    COUNT GRID
