@@ -355,6 +355,68 @@ const TRANSLATIONS = {
     dailyMixAgain: 'Play again',
     mistakeOneMore: 'One more to master it!',
     mistakeMastered: 'Mastered! 🎉',
+    // Error-specific hints — diagnostic codes + per-type strategy fallbacks (s*)
+    hints: {
+      addSubbed: 'Looks like you subtracted — the + sign means add!',
+      carry: 'Almost! When a column makes 10 or more, carry 1 to the next column.',
+      subAdded: 'Looks like you added — the − sign means take away!',
+      borrow: 'Check the borrowing — when the top digit is smaller, borrow 10 from the next column.',
+      tensOff: (n) => `So close — just ${n} off! Check the tens and hundreds.`,
+      offByOne: 'Just 1 or 2 off — count again slowly, you almost had it!',
+      onesSlip: 'The tens are right — double-check the ones digit.',
+      mulAdded: 'Looks like you added — the × sign means multiply!',
+      tableNeighbor: 'So close — one row off in the times table. Count the jumps again!',
+      zeros: 'Check your zeros — count them carefully when tens are involved.',
+      divSubbed: 'Looks like you subtracted — the ÷ sign means divide into equal groups.',
+      divMulled: 'Looks like you multiplied — the ÷ sign means divide.',
+      copiedResult: "That's the result from the equation — the box asks for the missing number!",
+      missWrongOp: 'Work backwards — use the opposite operation to find the missing number.',
+      ampm: "That's 12 hours off — is it before or after noon?",
+      handsSwapped: 'Careful — the short hand shows hours, the long hand shows minutes.',
+      hourOff: 'The minutes are right — the hour is one off. Where does the short hand point?',
+      minuteMirror: 'Read the minute hand clockwise from the 12 — each number counts 5.',
+      fiveOff: 'Just 5 minutes off — each number on the clock face is 5 minutes.',
+      shapeLookalike: 'Those two look alike! Check the sides — are they all the same length?',
+      perimAsArea: 'You found the area — perimeter is the distance all the way around.',
+      missedSide: 'A side is missing — add every side, all the way around.',
+      areaAsPerim: 'You found the perimeter — area is the space inside: multiply the sides.',
+      areaAdded: "Multiply the sides to get area — don't add them.",
+      halfMissing: 'A triangle is half a rectangle — multiply, then divide by 2.',
+      bigDenom: 'A bigger bottom number means smaller pieces — 1/8 is less than 1/4!',
+      onePart: "That's just one part — multiply by the top number too!",
+      fracSubbed: 'Don\'t subtract — "of" means divide by the bottom, then multiply by the top.',
+      notRounded: (to) => `That's the same number — round it to the nearest ${to}.`,
+      truncated: 'You rounded down — if the digit to the right is 5 or more, round UP.',
+      roundWrongWay: 'Wrong direction — digit to the right: 0–4 rounds down, 5–9 rounds up.',
+      equivSameTop: 'The bottom changed, so the top must change the same way!',
+      equivAdded: "Don't add — find what the bottom was multiplied by, and do the same on top.",
+      denomsAdded: 'The bottom number stays the same — only add the top numbers.',
+      wrongSign: 'Check the sign — did you add when you should subtract, or the other way?',
+      pctZeros: 'Check the decimal point — percent means "out of 100".',
+      pctRest: "That's the part that's left — the question asks for the percent part itself.",
+      pctSubbed: "Don't subtract the percent — find that percent OF the number.",
+      convCopied: 'The number needs converting — multiply or divide by the factor first.',
+      convInverse: 'You converted the wrong way — should the number get bigger or smaller?',
+      convZeros: 'Right digits, wrong number of zeros — check the conversion factor again.',
+      sAdd: 'Add the ones first — if they make 10 or more, carry 1 to the tens.',
+      sSub: 'Subtract the ones first — if the top digit is too small, borrow 10.',
+      sMul: 'Break it up: 7×6 is 7×5 plus one more 7.',
+      sDiv: 'Think of the times table — what number times the small one gives the big one?',
+      sMissing: 'Work backwards — use the opposite operation to find the box.',
+      sWord: 'Read the story again — find the numbers and ask: does it get more or less?',
+      sClock: 'Short hand = hours, long hand = minutes. Each number counts 5 minutes.',
+      sShape: "Count the sides and corners — they tell you the shape's name.",
+      sCount: 'Count slowly — touch each side or corner just once.',
+      sPerim: 'Perimeter = all the way around. Add every side.',
+      sArea: 'Area = the space inside. Multiply length by width.',
+      sCompare: 'Same bottom? Compare the tops. Same top? The smaller bottom wins!',
+      sFractionOf: 'Divide by the bottom number, then multiply by the top.',
+      sRounding: 'Look at the digit to the right: 0–4 rounds down, 5–9 rounds up.',
+      sEquivalent: 'Whatever you do to the bottom, do the same to the top.',
+      sFracAddSub: 'Same bottom number — just add or subtract the tops.',
+      sPercent: 'Find 10% or 1% first, then build up to the answer.',
+      sConv: 'Check the reference: how many small units fit in one big unit?',
+    },
     // Skills
     mySkills: 'My skills',
     // Badges
@@ -558,6 +620,68 @@ const TRANSLATIONS = {
     dailyMixAgain: 'Spil igen',
     mistakeOneMore: 'Én mere, så er den mestret!',
     mistakeMastered: 'Mestret! 🎉',
+    // Fejlspecifikke hints — diagnosekoder + strategi-fallbacks (s*)
+    hints: {
+      addSubbed: 'Det ligner, at du trak fra — plus (+) betyder læg sammen!',
+      carry: 'Tæt på! Når en søjle giver 10 eller mere, så husk 1 i mente.',
+      subAdded: 'Det ligner, at du lagde sammen — minus (−) betyder træk fra!',
+      borrow: 'Tjek din låning — når det øverste ciffer er mindst, skal du låne 10 fra naboen.',
+      tensOff: (n) => `Så tæt på — kun ${n} forkert! Tjek tierne og hundrederne.`,
+      offByOne: 'Kun 1 eller 2 forkert — tæl lige en gang til, du havde den næsten!',
+      onesSlip: 'Tierne er rigtige — tjek lige enerne en ekstra gang.',
+      mulAdded: 'Det ligner, at du lagde sammen — gangetegnet (×) betyder gange!',
+      tableNeighbor: 'Så tæt på — én række forkert i tabellen. Tæl hoppene igen!',
+      zeros: "Tjek dine nuller — tæl dem grundigt, når der er 10'ere med.",
+      divSubbed: 'Det ligner, at du trak fra — ÷ betyder del op i lige store grupper.',
+      divMulled: 'Det ligner, at du gangede — ÷ betyder del.',
+      copiedResult: 'Det er facit fra stykket — boksen spørger efter det tal, der mangler!',
+      missWrongOp: 'Regn baglæns — brug den modsatte regneart for at finde det manglende tal.',
+      ampm: 'Du er 12 timer forkert — er det før eller efter middag?',
+      handsSwapped: 'Pas på — den korte viser er timer, den lange er minutter.',
+      hourOff: 'Minutterne passer — timen er én forkert. Hvor peger den korte viser hen?',
+      minuteMirror: 'Aflæs den lange viser med uret fra 12 — hvert tal tæller 5.',
+      fiveOff: 'Kun 5 minutter forkert — hvert tal på uret er 5 minutter.',
+      shapeLookalike: 'De to ligner hinanden! Tjek siderne — er de alle lige lange?',
+      perimAsArea: 'Du fandt arealet — omkredsen er vejen hele vejen rundt.',
+      missedSide: 'Der mangler en side — læg alle siderne sammen, hele vejen rundt.',
+      areaAsPerim: 'Du fandt omkredsen — arealet er pladsen indeni: gang siderne.',
+      areaAdded: 'Gang siderne for at finde arealet — læg dem ikke sammen.',
+      halfMissing: 'En trekant er et halvt rektangel — gang, og del så med 2.',
+      bigDenom: 'Et større tal i bunden betyder mindre stykker — 1/8 er mindre end 1/4!',
+      onePart: 'Det er kun én del — gang også med det øverste tal!',
+      fracSubbed: 'Træk ikke fra — "af" betyder: del med det nederste tal og gang med det øverste.',
+      notRounded: (to) => `Det er det samme tal — rund det til nærmeste ${to}.`,
+      truncated: 'Du rundede ned — hvis cifret til højre er 5 eller mere, skal du runde OP.',
+      roundWrongWay: 'Forkert retning — cifret til højre: 0–4 runder ned, 5–9 runder op.',
+      equivSameTop: 'Bunden ændrede sig, så toppen skal ændres på samme måde!',
+      equivAdded: 'Læg ikke til — find hvad bunden blev ganget med, og gør det samme foroven.',
+      denomsAdded: 'Det nederste tal ændrer sig ikke — læg kun de øverste sammen.',
+      wrongSign: 'Tjek fortegnet — lagde du sammen, hvor du skulle trække fra, eller omvendt?',
+      pctZeros: 'Tjek kommaet — procent betyder "ud af 100".',
+      pctRest: 'Det er resten — opgaven spørger om selve procentdelen.',
+      pctSubbed: 'Træk ikke procenten fra — find procentdelen AF tallet.',
+      convCopied: 'Tallet skal omregnes — gang eller del med omregningstallet først.',
+      convInverse: 'Du regnede den forkerte vej — skal tallet blive større eller mindre?',
+      convZeros: 'Rigtige cifre, forkert antal nuller — tjek omregningen igen.',
+      sAdd: 'Læg enerne sammen først — giver de 10 eller mere, så husk 1 i mente.',
+      sSub: 'Træk enerne fra først — er det øverste ciffer for lille, så lån 10.',
+      sMul: 'Del det op: 7×6 er 7×5 plus 7 én gang til.',
+      sDiv: 'Tænk på gangetabellen — hvilket tal ganget med det lille giver det store?',
+      sMissing: 'Regn baglæns — brug den modsatte regneart for at finde boksen.',
+      sWord: 'Læs historien igen — find tallene og tænk: bliver det mere eller mindre?',
+      sClock: 'Kort viser = timer, lang viser = minutter. Hvert tal tæller 5 minutter.',
+      sShape: 'Tæl sider og hjørner — de fortæller dig figurens navn.',
+      sCount: 'Tæl langsomt — rør ved hver side og hvert hjørne én gang.',
+      sPerim: 'Omkreds = hele vejen rundt. Læg alle siderne sammen.',
+      sArea: 'Areal = pladsen indeni. Gang længden med bredden.',
+      sCompare: 'Samme bund? Sammenlign toppene. Samme top? Den mindste bund vinder!',
+      sFractionOf: 'Del med det nederste tal, og gang så med det øverste.',
+      sRounding: 'Se på cifret til højre: 0–4 runder ned, 5–9 runder op.',
+      sEquivalent: 'Det, du gør ved bunden, skal du også gøre ved toppen.',
+      sFracAddSub: 'Samme tal i bunden — læg kun toppene sammen, eller træk dem fra.',
+      sPercent: 'Find 10 % eller 1 % først, og byg dig op til svaret.',
+      sConv: 'Tjek omregningen: hvor mange små enheder er der i én stor?',
+    },
     // Skills
     mySkills: 'Mine færdigheder',
     // Badges
@@ -1945,6 +2069,12 @@ function renderConvRefBox() {
 // TRANSLATION HELPERS
 // ══════════════════════════════════════════
 function t(key) { return TRANSLATIONS[currentLang][key] ?? TRANSLATIONS.en[key] ?? key; }
+// Error-hint lookup by code; undefined for unknown/legacy codes so callers can skip rendering
+function hintText(code, args) {
+  const map = TRANSLATIONS[currentLang].hints ?? TRANSLATIONS.en.hints;
+  const v = map[code] ?? TRANSLATIONS.en.hints[code];
+  return typeof v === 'function' ? v(...(args || [])) : v;
+}
 
 function applyLang() {
   const T = TRANSLATIONS[currentLang];
@@ -2597,6 +2727,191 @@ document.addEventListener('keydown', e => {
 });
 
 // ══════════════════════════════════════════
+// MISTAKE DIAGNOSIS
+// Reverse-maps a wrong answer against the same mistake recipes the distractor
+// generators encode. Returns {code, args?}; falls back to a per-type strategy hint.
+// ══════════════════════════════════════════
+function hintNear(a, b) { return Math.abs(a - b) < 0.005; }
+
+// Digit-wise |top−bottom| — the classic "subtract smaller from larger" borrowing bug.
+// Returns null unless at least one column actually required borrowing.
+function borrowSlip(a, b) {
+  const A = String(a), B = String(b).padStart(String(a).length, '0');
+  let s = '', needs = false;
+  for (let i = 0; i < A.length; i++) {
+    const x = +A[i], y = +B[i];
+    if (x < y) needs = true;
+    s += Math.abs(x - y);
+  }
+  return needs ? parseInt(s, 10) : null;
+}
+
+function diagnoseMathOp(op, a, b, answer, chosen, d) {
+  if (op === '+') {
+    if (chosen === Math.abs(a - b)) return { code: 'addSubbed' };
+    if ([-10, -100, -110, -1000].includes(d)) return { code: 'carry' };
+    if (Math.abs(d) === 10 || Math.abs(d) === 100) return { code: 'tensOff', args: [Math.abs(d)] };
+    if (Math.abs(d) <= 2) return { code: 'offByOne' };
+    if (Math.abs(d) <= 9 && Math.floor(chosen / 10) === Math.floor(answer / 10)) return { code: 'onesSlip' };
+  } else if (op === '−') {
+    if (chosen === a + b) return { code: 'subAdded' };
+    if (chosen === borrowSlip(a, b)) return { code: 'borrow' };
+    if (Math.abs(d) === 10 || Math.abs(d) === 100) return { code: 'tensOff', args: [Math.abs(d)] };
+    if (Math.abs(d) <= 2) return { code: 'offByOne' };
+    if (Math.abs(d) <= 9 && Math.floor(chosen / 10) === Math.floor(answer / 10)) return { code: 'onesSlip' };
+  } else if (op === '×') {
+    if (chosen === a + b && a + b !== answer) return { code: 'mulAdded' };
+    if ([answer + a, answer - a, answer + b, answer - b].includes(chosen) && chosen > 0) return { code: 'tableNeighbor' };
+    if (hintNear(chosen, answer * 10) || hintNear(chosen * 10, answer)) return { code: 'zeros' };
+    if (Math.abs(d) <= 2) return { code: 'offByOne' };
+  } else if (op === '÷') {
+    if (chosen === a - b) return { code: 'divSubbed' };
+    if (chosen === a * b) return { code: 'divMulled' };
+    if (Math.abs(d) === 1) return { code: 'tableNeighbor' };
+  }
+  return null;
+}
+
+function diagnoseMistake(cq, chosen) {
+  const display = cq.display, answer = cq.answer, d = chosen - answer;
+  const type = cq.practiceType;
+
+  if (!type || type === 'math' || type === 'times-table') {
+    if (display.kind === 'missing') {
+      // answer = hidden operand; v = visible operand, r = the shown result
+      if (chosen === display.result) return { code: 'copiedResult' };
+      const { a, b, op, pos, result: r } = display;
+      const v = pos === 'a' ? b : a;
+      const forward =
+        op === '+' ? chosen === v + r
+        : op === '−' ? (pos === 'b' ? chosen === a + r : chosen === Math.abs(r - b))
+        : op === '×' ? chosen === v * r
+        : (pos === 'a' ? Number.isInteger(r / b) && chosen === r / b : chosen === a * r);
+      if (forward) return { code: 'missWrongOp' };
+      if (Math.abs(d) <= 2) return { code: 'offByOne' };
+      return null;
+    }
+    // word stores the op NAME; plain math stores the symbol
+    const op = display.kind === 'word' ? OP_SYMBOLS[display.op] : display.op;
+    return diagnoseMathOp(op, display.a, display.b, answer, chosen, d);
+  }
+
+  if (type === 'clock') {
+    const norm = (v) => ((v % 1440) + 1440) % 1440;
+    const h = Math.floor(answer / 60), m = answer % 60;
+    if (chosen === norm(answer + 720)) return { code: 'ampm' };
+    const sw = ((Math.round(m / 5) % 12) * 60 + (h % 12) * 5);
+    if (chosen === norm(sw) || chosen === norm(sw + 720)) return { code: 'handsSwapped' };
+    if (chosen === norm(answer + 60) || chosen === norm(answer - 60)) return { code: 'hourOff' };
+    const mir = h * 60 + (60 - m);
+    if (m !== 0 && (chosen === norm(mir) || chosen === norm(mir + 720))) return { code: 'minuteMirror' };
+    if (Math.abs(chosen - answer) === 5) return { code: 'fiveOff' };
+    return null;
+  }
+
+  if (type === 'geometry') {
+    const dm = display.dims || {};
+    if (display.kind === 'name') {
+      const c = SHAPES[chosen], t0 = SHAPES[answer];
+      if (c && t0 && ((c.sides > 0 && c.sides === t0.sides) || (c.sides === 0 && t0.sides === 0)))
+        return { code: 'shapeLookalike' };
+      return null;
+    }
+    if (display.kind === 'count') return Math.abs(d) <= 2 ? { code: 'offByOne' } : null;
+    if (display.kind === 'perimeter') {
+      if (chosen === dm.s * dm.s || chosen === dm.w * dm.h) return { code: 'perimAsArea' };
+      if ([3 * dm.s, 2 * dm.w + dm.h, dm.w + 2 * dm.h, dm.w + dm.h,
+           dm.a + dm.b, dm.a + dm.c, dm.b + dm.c].includes(chosen)) return { code: 'missedSide' };
+      return null;
+    }
+    if (display.kind === 'area') {
+      if (chosen === 4 * dm.s || chosen === 2 * (dm.w + dm.h)) return { code: 'areaAsPerim' };
+      if (dm.a != null && chosen === dm.a * dm.b) return { code: 'halfMissing' };
+      if (chosen === 2 * dm.s || chosen === dm.w + dm.h || (dm.a != null && chosen === dm.a + dm.b)) return { code: 'areaAdded' };
+      return null;
+    }
+    return null;
+  }
+
+  if (type === 'fractions') {
+    const k = display.kind;
+    if (k === 'compare') {
+      const chosenFr = display.fr[chosen];
+      if (chosenFr && chosenFr[1] === Math.max(...display.fr.map(f => f[1]))) return { code: 'bigDenom' };
+      return null;
+    }
+    if (k === 'fractionOf') {
+      if (chosen === Math.round(display.x / display.d)) return { code: 'onePart' };
+      if (chosen === display.x - display.n) return { code: 'fracSubbed' };
+      return null;
+    }
+    if (k === 'rounding') {
+      if (chosen === display.nVal) return { code: 'notRounded', args: [display.to] };
+      if (chosen === Math.floor(display.nVal / display.to) * display.to) return { code: 'truncated' };
+      if (chosen === Math.ceil(display.nVal / display.to) * display.to) return { code: 'roundWrongWay' };
+      return null;
+    }
+    if (k === 'equivalent') {
+      if (chosen === display.ln) return { code: 'equivSameTop' };
+      if (chosen === display.ln + (display.rd - display.ld)) return { code: 'equivAdded' };
+      return null;
+    }
+    if (k === 'addSub') {
+      if (chosen === display.n1 + display.n2 + display.d) return { code: 'denomsAdded' };
+      if (display.fop === '+' ? chosen === Math.abs(display.n1 - display.n2) : chosen === display.n1 + display.n2)
+        return { code: 'wrongSign' };
+      return null;
+    }
+    if (k === 'percent') {
+      if (hintNear(chosen, answer * 10) || hintNear(chosen * 10, answer)) return { code: 'pctZeros' };
+      if (chosen === display.x - answer) return { code: 'pctRest' };
+      if (chosen === display.x - display.p) return { code: 'pctSubbed' };
+      return null;
+    }
+    return null;
+  }
+
+  if (type === 'conversions') {
+    const nearC = (a, b) => Math.abs(a - b) < 0.051; // matches the generator's 1-decimal rounding
+    if (nearC(chosen, display.fromValue) && !hintNear(display.fromValue, answer)) return { code: 'convCopied' };
+    if (nearC(chosen, Math.round(display.fromValue / display.factor * 10) / 10)) return { code: 'convInverse' };
+    if ([10, 100, 1000].some(k => nearC(chosen, answer * k) || nearC(chosen * k, answer))) return { code: 'convZeros' };
+    return null;
+  }
+
+  return null;
+}
+
+function strategyCode(cq) {
+  const type = cq.practiceType, kind = cq.display.kind;
+  if (!type || type === 'math' || type === 'times-table') {
+    if (kind === 'word') return 'sWord';
+    if (kind === 'missing') return 'sMissing';
+    return { '+': 'sAdd', '−': 'sSub', '×': 'sMul', '÷': 'sDiv' }[cq.display.op] || 'sAdd';
+  }
+  if (type === 'clock') return 'sClock';
+  if (type === 'geometry')
+    return { name: 'sShape', count: 'sCount', perimeter: 'sPerim', area: 'sArea' }[kind] || 'sShape';
+  if (type === 'fractions')
+    return { compare: 'sCompare', fractionOf: 'sFractionOf', rounding: 'sRounding',
+             equivalent: 'sEquivalent', addSub: 'sFracAddSub', percent: 'sPercent' }[kind] || 'sCompare';
+  if (type === 'conversions') return 'sConv';
+  return 'sAdd';
+}
+
+function buildHint(cq, chosen) { // {code, args?} — never null when cq exists
+  return diagnoseMistake(cq, chosen) || { code: strategyCode(cq) };
+}
+
+function showWrongFeedback(fb, answerLabel, hint) {
+  const txt = hint && !sprintMode ? hintText(hint.code, hint.args) : null;
+  const hintLine = txt ? `<span class="feedback-hint">💡 ${txt}</span>` : '';
+  // All interpolated strings are app-generated (shape names, h:mm, n/d) — safe for innerHTML
+  fb.innerHTML = `<span class="feedback-main">${t('wrongFeedback')(answerLabel)}</span>${hintLine}`;
+  fb.className = 'feedback wrong show';
+}
+
+// ══════════════════════════════════════════
 // HANDLE ANSWER
 // ══════════════════════════════════════════
 function handleAnswer(chosen, btnEl) {
@@ -2616,6 +2931,8 @@ function handleAnswer(chosen, btnEl) {
     : cq && cq.practiceType === 'fractions' && cq.display.kind === 'compare' ? 'frac'
     : undefined;
   const answerLabel = fmtAnswer(cq, currentAnswer);
+  // Diagnose the likely mistake (also in sprint — rendering is gated, the summary still shows it)
+  const hint = !wasCorrect && cq ? buildHint(cq, Number(chosen)) : null;
   sessionScore+=qScore;
   // Mix sessions interleave skills — tag each log line so skill stats and the scheduler see it
   let skill, skillTable;
@@ -2626,7 +2943,7 @@ function handleAnswer(chosen, btnEl) {
       : pt;
     if (pt === 'times-table') skillTable = cq.table;
   }
-  sessionLog.push({equation:renderQuestion._currentEquation,correctAnswer:currentAnswer,chosen,wasCorrect,elapsedMs,score:qScore,maxQScore,fmt:logFmt,fracChoices:logFmt==='frac'?cq.display.fr:undefined,skill,table:skillTable});
+  sessionLog.push({equation:renderQuestion._currentEquation,correctAnswer:currentAnswer,chosen,wasCorrect,elapsedMs,score:qScore,maxQScore,fmt:logFmt,fracChoices:logFmt==='frac'?cq.display.fr:undefined,skill,table:skillTable,hintCode:hint?hint.code:undefined,hintArgs:hint&&hint.args?hint.args:undefined});
 
   let mistakeNote = '';
   if (cq) {
@@ -2655,7 +2972,7 @@ function handleAnswer(chosen, btnEl) {
         if(Math.abs(Number(b.dataset.value)-currentAnswer)<0.005) b.classList.add('correct-choice');
       });
       card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400);
-      fb.textContent=t('wrongFeedback')(answerLabel); fb.className='feedback wrong show';
+      showWrongFeedback(fb, answerLabel, hint);
     }
   } else {
     document.querySelectorAll('.numpad-btn').forEach(b=>(b.disabled=true));
@@ -2667,13 +2984,14 @@ function handleAnswer(chosen, btnEl) {
     } else {
       wrong++; card.classList.add('wrong'); disp.classList.add('numpad-wrong'); disp.textContent=fmtAnswer(cq,chosen);
       card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400);
-      fb.textContent=t('wrongFeedback')(answerLabel); fb.className='feedback wrong show';
+      showWrongFeedback(fb, answerLabel, hint);
     }
   }
   updateScorebar();
   currentQ++;
 
-  const delay = wasCorrect ? 1000 : 1500;
+  // Wrong answers pause longer so the hint can be read; sprint stays fast (no hint shown there)
+  const delay = wasCorrect ? 1000 : (sprintMode ? 1500 : 4000);
 
   // On touch devices, wait for the finger to fully lift before scheduling
   // the next question. iOS applies tap-highlight based on the active touch —
@@ -2945,6 +3263,7 @@ function renderSummaryList(listEl,countEl,log) {
       <span class="summary-chosen">${e.wasCorrect?`<span class="summary-icon">✓</span> ${logVal(e,e.chosen)}`:`<span class="summary-icon">✗</span> <s>${logVal(e,e.chosen)}</s>`}</span>
       <span class="summary-time">${fmtMsShort(e.elapsedMs)}</span>
       ${e.maxQScore!=null?`<span class="summary-score">${e.score}<span class="summary-score-max">/${e.maxQScore}</span></span>`:''}
+      ${!e.wasCorrect && e.hintCode && hintText(e.hintCode, e.hintArgs)?`<span class="summary-hint">💡 ${hintText(e.hintCode, e.hintArgs)}</span>`:''}
     </div>`).join('');
 }
 

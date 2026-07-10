@@ -792,10 +792,14 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 /* ══════════════════════════════════════════
    FEEDBACK
 ══════════════════════════════════════════ */
-.feedback { height: 36px; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: .85rem; font-weight: 700; letter-spacing: 1px; margin-top: 20px; opacity: 0; transition: opacity .2s; }
+.feedback { min-height: 36px; display: flex; flex-direction: column; gap: 5px; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: .85rem; font-weight: 700; letter-spacing: 1px; margin-top: 20px; opacity: 0; transition: opacity .2s; }
 .feedback.show    { opacity: 1; }
 .feedback.correct { color: var(--green); }
 .feedback.wrong   { color: var(--red); }
+.feedback-hint {
+  font-size: .7rem; font-weight: 400; letter-spacing: .2px; line-height: 1.45;
+  color: var(--red); opacity: .75; max-width: 46ch;
+}
 
 /* ══════════════════════════════════════════
    BUTTONS
@@ -952,6 +956,10 @@ header { display: flex; align-items: center; justify-content: space-between; pad
 .summary-time   { font-family: 'Space Mono', monospace; font-size: .72rem; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; white-space: nowrap; flex-shrink: 0; }
 .summary-score  { font-family: 'Space Mono', monospace; font-size: .72rem; font-weight: 700; color: var(--orange-light); white-space: nowrap; text-align: right; }
 .summary-score-max { font-size: .65rem; color: var(--muted); font-weight: 400; }
+.summary-hint {
+  grid-column: 1/-1; font-family: 'Space Mono', monospace;
+  font-size: .68rem; font-weight: 400; color: var(--muted); line-height: 1.45; text-align: left;
+}
 .summary-row.summary-wrong .summary-score { color: var(--muted); }
 .summary-empty  { font-family: 'Space Mono', monospace; font-size: .8rem; color: var(--muted); text-align: center; padding: 24px 0; }
 
@@ -1025,6 +1033,8 @@ header { display: flex; align-items: center; justify-content: space-between; pad
   .hist-op-badge  { width: 28px; height: 28px; font-size: .85rem; }
   .hist-meta      { font-size: .6rem; }
   .summary-row    { grid-template-columns: 22px 1fr auto; grid-template-rows: auto auto; row-gap: 4px; }
+  .feedback-hint  { font-size: .65rem; }
+  .summary-hint   { font-size: .62rem; }
   .summary-chosen { grid-column: 2; font-size: .75rem; }
   .summary-time   { grid-column: 3; grid-row: 1/3; align-self: center; }
   .btn-cancel     { font-size: .65rem; padding: 0 10px; }
